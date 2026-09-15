@@ -90,6 +90,8 @@ namespace inputleap {
 #define INPUTLEAP_MSG_FAKE_REL_MOVE INPUTLEAP_HOOK_LAST_MSG + 11
 // enable; <unused>
 #define INPUTLEAP_MSG_FAKE_INPUT INPUTLEAP_HOOK_LAST_MSG + 12
+// re-hide the cursor if the hider window lost its capture; <unused>; <unused>
+#define INPUTLEAP_MSG_REHIDE_CURSOR INPUTLEAP_HOOK_LAST_MSG + 13
 
 //
 // MSWindowsDesks
@@ -529,6 +531,36 @@ MSWindowsDesks::deskEnter(Desk* desk)
 }
 
 void
+MSWindowsDesks::deskRehideCursor(Desk* desk)
+{
+    // the hider window only holds the capture until something else takes it,
+    // e.g. a local application or a desk switch.  when that happens the cursor
+    // becomes visible again even though the mouse is on another screen, so put
+    // the hider back.  if the cursor has moved then the local user is using the
+    // physically attached mouse, and secondaryDeskProc hid the window on
+    // purpose, so leave the cursor alone.
+    if (m_isPrimary || m_isOnScreen || desk->m_window == nullptr) {
+        return;
+    }
+
+    POINT pos;
+    if (!GetCursorPos(&pos)) {
+        return;
+    }
+    if (pos.x != m_hiddenCursorPos.x || pos.y != m_hiddenCursorPos.y) {
+        return;
+    }
+    if (GetCapture() == desk->m_window && IsWindowVisible(desk->m_window)) {
+        return;
+    }
+
+    SetWindowPos(desk->m_window, HWND_TOP,
+                        m_xCenter, m_yCenter, 1, 1,
+                        SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    SetCapture(desk->m_window);
+}
+
+void
 MSWindowsDesks::deskLeave(Desk* desk, HKL keyLayout)
 {
     ShowCursor(FALSE);
@@ -581,6 +613,14 @@ MSWindowsDesks::deskLeave(Desk* desk, HKL keyLayout)
         // mouse if desired.  we'd rather not capture the mouse but
         // we aren't notified when the mouse leaves our window.
         SetCapture(desk->m_window);
+
+        // remember where the cursor is.  while it stays here the local user
+        // hasn't touched the mouse, so we may re-hide it if we lose the
+        // capture.  see deskRehideCursor().
+        if (!GetCursorPos(&m_hiddenCursorPos)) {
+            m_hiddenCursorPos.x = m_xCenter;
+            m_hiddenCursorPos.y = m_yCenter;
+        }
 
         // warp the mouse to the cursor center
         LOG_DEBUG2("warping cursor to center: %+d,%+d", m_xCenter, m_yCenter);
@@ -711,6 +751,10 @@ void MSWindowsDesks::desk_thread(Desk* desk)
             keybd_event(INPUTLEAP_HOOK_FAKE_INPUT_VIRTUAL_KEY,
                         INPUTLEAP_HOOK_FAKE_INPUT_SCANCODE,
                         msg.wParam ? 0 : KEYEVENTF_KEYUP, 0);
+            break;
+
+        case INPUTLEAP_MSG_REHIDE_CURSOR:
+            deskRehideCursor(desk);
             break;
         }
 
@@ -852,6 +896,12 @@ MSWindowsDesks::waitForDesk() const
 void MSWindowsDesks::handle_check_desk()
 {
     checkDesk();
+
+    // keep the cursor hidden while the mouse is on another screen.  the hider
+    // window can lose its capture, which makes the cursor reappear.
+    if (!m_isPrimary && !m_isOnScreen) {
+        sendMessage(INPUTLEAP_MSG_REHIDE_CURSOR, 0, 0);
+    }
 
     // also check if screen saver is running if on a modern OS and
     // this is the primary screen.

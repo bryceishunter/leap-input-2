@@ -219,6 +219,7 @@ private:
     void deskMouseRelativeMove(std::int32_t dx, std::int32_t dy) const;
     void deskEnter(Desk* desk);
     void deskLeave(Desk* desk, HKL keyLayout);
+    void deskRehideCursor(Desk* desk);
     void desk_thread(Desk* desk);
 
     // desk switch checking and handling
@@ -253,6 +254,10 @@ private:
 
     // true if mouse has entered the screen
     bool m_isOnScreen;
+
+    // where the cursor was when the mouse left this screen.  used to tell our
+    // own hiding apart from the local user moving the physical mouse.
+    POINT m_hiddenCursorPos{};
 
     // our resources
     ATOM m_deskClass;
