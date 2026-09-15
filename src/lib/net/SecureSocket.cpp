@@ -363,37 +363,31 @@ SecureSocket::initContext(bool server)
 {
     // ssl_mutex_ is assumed to be acquired
 
-    SSL_library_init();
+    // OpenSSL >= 1.1.0 loads algorithms and error strings automatically
 
     const SSL_METHOD* method;
-
-    // load & register all cryptos, etc.
-    OpenSSL_add_all_algorithms();
-
-    // load all error messages
-    SSL_load_error_strings();
 
     if (CLOG->getFilter() >= kINFO) {
         showSecureLibInfo();
     }
 
-    // SSLv23_method uses TLSv1, with the ability to fall back to SSLv3
+    // TLS_method negotiates the highest protocol version supported by both peers
     if (server) {
-        method = SSLv23_server_method();
+        method = TLS_server_method();
     }
     else {
-        method = SSLv23_client_method();
+        method = TLS_client_method();
     }
 
     // create new context from method
-    SSL_METHOD* m = const_cast<SSL_METHOD*>(method);
-    m_ssl->m_context = SSL_CTX_new(m);
-
-    // drop SSLv3 support
-    SSL_CTX_set_options(m_ssl->m_context, SSL_OP_NO_SSLv3);
+    m_ssl->m_context = SSL_CTX_new(method);
 
     if (m_ssl->m_context == nullptr) {
         showError("");
+    }
+    else {
+        // require TLS 1.2 or newer
+        SSL_CTX_set_min_proto_version(m_ssl->m_context, TLS1_2_VERSION);
     }
 
     if (security_level_ == ConnectionSecurityLevel::ENCRYPTED_AUTHENTICATED) {
@@ -658,7 +652,11 @@ bool SecureSocket::verify_peer_certificate(const inputleap::fs::path& fingerprin
     // ssl_mutex_ is assumed to be acquired
 
     // ensure peer presented a certificate
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    X509* cert = SSL_get1_peer_certificate(m_ssl->m_ssl);
+#else
     X509* cert = SSL_get_peer_certificate(m_ssl->m_ssl);
+#endif
     if (cert == nullptr) {
         showError("peer has no ssl certificate");
         return false;
@@ -836,11 +834,11 @@ SecureSocket::showSecureCipherInfo()
 void
 SecureSocket::showSecureLibInfo()
 {
-    LOG_INFO("%s",SSLeay_version(SSLEAY_VERSION));
-    LOG_DEBUG1("openSSL : %s",SSLeay_version(SSLEAY_CFLAGS));
-    LOG_DEBUG1("openSSL : %s",SSLeay_version(SSLEAY_BUILT_ON));
-    LOG_DEBUG1("openSSL : %s",SSLeay_version(SSLEAY_PLATFORM));
-    LOG_DEBUG1("%s",SSLeay_version(SSLEAY_DIR));
+    LOG_INFO("%s",OpenSSL_version(OPENSSL_VERSION));
+    LOG_DEBUG1("openSSL : %s",OpenSSL_version(OPENSSL_CFLAGS));
+    LOG_DEBUG1("openSSL : %s",OpenSSL_version(OPENSSL_BUILT_ON));
+    LOG_DEBUG1("openSSL : %s",OpenSSL_version(OPENSSL_PLATFORM));
+    LOG_DEBUG1("%s",OpenSSL_version(OPENSSL_DIR));
     return;
 }
 

@@ -85,9 +85,6 @@ void SslCertificate::generate_fingerprint(const inputleap::fs::path& cert_path)
 
 bool SslCertificate::is_certificate_valid(const inputleap::fs::path& path)
 {
-    OpenSSL_add_all_algorithms();
-    ERR_load_crypto_strings();
-
     auto fp = inputleap::fopen_utf8_path(path, "r");
     if (!fp) {
         Q_EMIT info(tr("Could not read from default certificate file."));

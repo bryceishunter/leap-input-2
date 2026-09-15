@@ -18,7 +18,12 @@
 #pragma once
 
 #include "FingerprintData.h"
+#include <openssl/opensslv.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/types.h>
+#else
 #include <openssl/ossl_typ.h>
+#endif
 #include <cstdint>
 #include <string>
 #include <vector>
