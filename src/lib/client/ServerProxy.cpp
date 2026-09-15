@@ -321,14 +321,10 @@ ServerProxy::EResult ServerProxy::parseMessage(const std::uint8_t* code)
         return kUnknown;
     }
 
-    // send a reply.  this is intended to work around a delay when
-    // running a linux server and an OS X (any BSD?) client.  the
-    // client waits to send an ACK (if the system control flag
-    // net.inet.tcp.delayed_ack is 1) in hopes of piggybacking it
-    // on a data packet.  we provide that packet here.  i don't
-    // know why a delayed ACK should cause the server to wait since
-    // TCP_NODELAY is enabled.
-    ProtocolUtil::writef(m_stream, kMsgCNoop);
+    // note: this used to reply with kMsgCNoop to every message, to work around
+    // delayed ACKs on BSD-derived clients.  that doubled the packets and TLS
+    // records in the reverse direction, which costs more than it saves over a
+    // VPN.  the keep alive echo above still gives the server regular traffic.
 
     return kOkay;
 }

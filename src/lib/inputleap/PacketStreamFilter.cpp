@@ -22,6 +22,7 @@
 
 #include <cstring>
 #include <memory>
+#include <vector>
 
 namespace inputleap {
 
@@ -86,16 +87,16 @@ std::uint32_t PacketStreamFilter::read(void* buffer, std::uint32_t n)
 
 void PacketStreamFilter::write(const void* buffer, std::uint32_t count)
 {
-    // write the length of the payload
-    std::uint8_t length[4];
-    length[0] = static_cast<std::uint8_t>((count >> 24) & 0xff);
-    length[1] = static_cast<std::uint8_t>((count >> 16) & 0xff);
-    length[2] = static_cast<std::uint8_t>((count >> 8) & 0xff);
-    length[3] = static_cast<std::uint8_t>(count& 0xff);
-    getStream()->write(length, sizeof(length));
+    // write the length and the payload in one call.  two calls may be flushed
+    // separately, costing an extra TLS record and TCP segment per message.
+    std::vector<std::uint8_t> packet(sizeof(std::uint32_t) + count);
+    packet[0] = static_cast<std::uint8_t>((count >> 24) & 0xff);
+    packet[1] = static_cast<std::uint8_t>((count >> 16) & 0xff);
+    packet[2] = static_cast<std::uint8_t>((count >> 8) & 0xff);
+    packet[3] = static_cast<std::uint8_t>(count& 0xff);
+    std::memcpy(packet.data() + sizeof(std::uint32_t), buffer, count);
 
-    // write the payload
-    getStream()->write(buffer, count);
+    getStream()->write(packet.data(), static_cast<std::uint32_t>(packet.size()));
 }
 
 void
