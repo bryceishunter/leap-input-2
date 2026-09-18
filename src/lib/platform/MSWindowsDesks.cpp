@@ -764,7 +764,12 @@ void MSWindowsDesks::desk_thread(Desk* desk)
         desks_ready_cv_.notify_all();
     }
 
-    // clean up
+    // clean up.  the system discards a thread's hooks when the thread exits, but
+    // MSWindowsHook would keep their stale handles and then refuse to install
+    // hooks when the screen is enabled again (as on resume), so remove them now.
+    if (m_isPrimary && !m_noHooks) {
+        MSWindowsHook::uninstall();
+    }
     deskEnter(desk);
     if (desk->m_window != nullptr) {
         DestroyWindow(desk->m_window);
