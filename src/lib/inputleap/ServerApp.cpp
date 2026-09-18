@@ -621,10 +621,22 @@ void ServerApp::handle_screen_error()
 
 void ServerApp::handle_suspend()
 {
+    if (m_suspended) {
+        return;
+    }
+    LOG_INFO("suspend");
+
+    // stopServer() waits for the clients to disconnect in a nested event loop.  the suspend
+    // notification can arrive again from inside it (once per window), and if the system goes
+    // to sleep mid-wait then so can the resume notification.  mark the server suspended first
+    // so that it is stopped only once...
+    m_suspended = true;
+    stopServer();
+
+    // ...and start it again here if the system resumed meanwhile, since handle_resume()
+    // cannot start a server that is still stopping.
     if (!m_suspended) {
-        LOG_INFO("suspend");
-        stopServer();
-        m_suspended = true;
+        startServer();
     }
 }
 
