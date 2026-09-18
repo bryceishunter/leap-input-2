@@ -33,8 +33,9 @@ ClientProxy::~ClientProxy() = default;
 void
 ClientProxy::close(const char* msg)
 {
-    // force the close to be sent before we return
-    get_conn().flush();
+    // not flushed: flushing blocks until the socket drains, which a secure socket never does
+    // once it has failed.  callers keep the proxy until the client disconnects or times out.
+    get_conn().send_close_1_6(msg);
 }
 
 const EventTarget* ClientProxy::get_event_target() const
