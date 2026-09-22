@@ -71,11 +71,11 @@ BEGIN
             VALUE "CompanyWeb", "https://github.com/input-leap/input-leap"
             VALUE "FileVersion", INPUTLEAP_VERSION
             VALUE "LegalCopyright", "Copyright (C) 2021-2023 InputLeap contributors\nCopyright (C) 2018 Debauchee Open Source Group\nCopyright (C) 2012-2016 Symless Ltd.\nCopyright (C) 2008-2014 Nick Bolton\nCopyright (C) 2002-2014 Chris Schoeneman"
-            VALUE "ProductName", "InputLeap"
+            VALUE "ProductName", "Barrier"
             VALUE "ProductVersion", INPUTLEAP_VERSION
-            VALUE "OriginalFilename", "input-leaps.exe"
-            VALUE "FileDescription", "Open source KVM software server"
-            VALUE "InternalName", "input-leaps"
+            VALUE "OriginalFilename", "leapdesk-client.exe"
+            VALUE "FileDescription", "Open source KVM software client"
+            VALUE "InternalName", "leapdesk-client"
         END
     END
     BLOCK "VarFileInfo"
@@ -102,7 +102,7 @@ IDI_INPUTLEAP             ICON                    "../../res/input-leap.ico"
 
 IDR_TASKBAR MENU
 BEGIN
-    POPUP "InputLeap"
+    POPUP "Barrier"
     BEGIN
         MENUITEM "Show Status",                 IDC_TASKBAR_STATUS
         MENUITEM "Show Log",                    IDC_TASKBAR_SHOW_LOG
@@ -117,9 +117,6 @@ BEGIN
             MENUITEM "Debug1",                      IDC_TASKBAR_LOG_LEVEL_DEBUG1
             MENUITEM "Debug2",                      IDC_TASKBAR_LOG_LEVEL_DEBUG2
         END
-        MENUITEM "Reload Configuration",        IDC_RELOAD_CONFIG
-        MENUITEM "Force Reconnect",             IDC_FORCE_RECONNECT
-        MENUITEM "Reset Server",                ID_INPUTLEAP_RESETSERVER
         MENUITEM SEPARATOR
         MENUITEM "Quit",                        IDC_TASKBAR_QUIT
     END
@@ -131,12 +128,12 @@ END
 // Dialog
 //
 
-IDD_TASKBAR_STATUS DIALOG  0, 0, 145, 60
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
+IDD_TASKBAR_STATUS DIALOG  0, 0, 145, 18
+STYLE DS_MODALFRAME | WS_POPUP
 FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_TASKBAR_STATUS_STATUS,3,3,139,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
-    LISTBOX         IDC_TASKBAR_STATUS_CLIENTS,3,17,139,40,NOT LBS_NOTIFY | LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_NOSEL | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_TASKBAR_STATUS_STATUS,3,3,139,12,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER
 END
 
 
@@ -147,8 +144,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FAILED              "InputLeap is about to quit with errors or warnings.  Please check the log then click OK."
-    IDS_INIT_FAILED         "InputLeap failed to initialize: %{1}"
+    IDS_FAILED              "Barrier is about to quit with errors or warnings.  Please check the log then click OK."
+    IDS_INIT_FAILED         "Barrier failed to initialize: %{1}"
     IDS_UNCAUGHT_EXCEPTION  "Uncaught exception: %{1}"
 END
 

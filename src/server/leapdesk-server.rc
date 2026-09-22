@@ -1,5 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
+#include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -72,9 +73,9 @@ BEGIN
             VALUE "LegalCopyright", "Copyright (C) 2021-2023 InputLeap contributors\nCopyright (C) 2018 Debauchee Open Source Group\nCopyright (C) 2012-2016 Symless Ltd.\nCopyright (C) 2008-2014 Nick Bolton\nCopyright (C) 2002-2014 Chris Schoeneman"
             VALUE "ProductName", "InputLeap"
             VALUE "ProductVersion", INPUTLEAP_VERSION
-            VALUE "OriginalFilename", "input-leapd.exe"
-            VALUE "FileDescription", "Open source KVM software daemon"
-            VALUE "InternalName", "input-leapd"
+            VALUE "OriginalFilename", "leapdesk-server.exe"
+            VALUE "FileDescription", "Open source KVM software server"
+            VALUE "InternalName", "leapdesk-server"
         END
     END
     BLOCK "VarFileInfo"
@@ -93,6 +94,63 @@ END
 // remains consistent on all systems.
 IDI_INPUTLEAP             ICON                    "../../res/input-leap.ico"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_TASKBAR MENU
+BEGIN
+    POPUP "InputLeap"
+    BEGIN
+        MENUITEM "Show Status",                 IDC_TASKBAR_STATUS
+        MENUITEM "Show Log",                    IDC_TASKBAR_SHOW_LOG
+        MENUITEM "Copy Log To Clipboard",       IDC_TASKBAR_LOG
+        POPUP "Set Log Level"
+        BEGIN
+            MENUITEM "Error",                       IDC_TASKBAR_LOG_LEVEL_ERROR
+            MENUITEM "Warning",                     IDC_TASKBAR_LOG_LEVEL_WARNING
+            MENUITEM "Note",                        IDC_TASKBAR_LOG_LEVEL_NOTE
+            MENUITEM "Info",                        IDC_TASKBAR_LOG_LEVEL_INFO
+            MENUITEM "Debug",                       IDC_TASKBAR_LOG_LEVEL_DEBUG
+            MENUITEM "Debug1",                      IDC_TASKBAR_LOG_LEVEL_DEBUG1
+            MENUITEM "Debug2",                      IDC_TASKBAR_LOG_LEVEL_DEBUG2
+        END
+        MENUITEM "Reload Configuration",        IDC_RELOAD_CONFIG
+        MENUITEM "Force Reconnect",             IDC_FORCE_RECONNECT
+        MENUITEM "Reset Server",                ID_INPUTLEAP_RESETSERVER
+        MENUITEM SEPARATOR
+        MENUITEM "Quit",                        IDC_TASKBAR_QUIT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_TASKBAR_STATUS DIALOG  0, 0, 145, 60
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_TASKBAR_STATUS_STATUS,3,3,139,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    LISTBOX         IDC_TASKBAR_STATUS_CLIENTS,3,17,139,40,NOT LBS_NOTIFY | LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_NOSEL | WS_VSCROLL | WS_TABSTOP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_FAILED              "InputLeap is about to quit with errors or warnings.  Please check the log then click OK."
+    IDS_INIT_FAILED         "InputLeap failed to initialize: %{1}"
+    IDS_UNCAUGHT_EXCEPTION  "Uncaught exception: %{1}"
+END
 
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////

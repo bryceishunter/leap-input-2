@@ -298,7 +298,7 @@ if (APPLE)
 
     add_custom_target(InputLeap_MacOS ALL
                       bash build_dist.sh
-                      DEPENDS input-leap input-leaps input-leapc
+                      DEPENDS leapdesk leapdesk-server leapdesk-client
                       WORKING_DIRECTORY ${INPUTLEAP_BUNDLE_DIR})
 elseif (UNIX AND NOT APPLE)
     install(FILES doc/input-leapc.1 doc/input-leaps.1 DESTINATION share/man/man1)

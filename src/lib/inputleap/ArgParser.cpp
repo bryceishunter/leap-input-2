@@ -215,7 +215,7 @@ bool
 ArgParser::parseMSWindowsArg(ArgsBase& argsBase, Argv& argv)
 {
     if (argv.shift("--service")) {
-        LOG_WARN("obsolete argument --service, use input-leapd instead.");
+        LOG_WARN("obsolete argument --service, use leapdesk-daemon instead.");
         argsBase.m_shouldExit = true;
     }
     else if (argv.shift("--exit-pause")) {

@@ -15,21 +15,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-set(sources input-leapd.cpp)
+set(sources leapdesk-daemon.cpp)
 if (WIN32)
-    list(APPEND sources input-leapd.rc)
-    set_property(SOURCE input-leapd.rc PROPERTY COMPILE_FLAGS /nologo)
+    list(APPEND sources leapdesk-daemon.rc)
+    set_property(SOURCE leapdesk-daemon.rc PROPERTY COMPILE_FLAGS /nologo)
 endif()
 
-add_executable (input-leapd WIN32 ${sources})
+add_executable (leapdesk-daemon WIN32 ${sources})
 
-target_link_libraries (input-leapd
+target_link_libraries (leapdesk-daemon
     arch base common io ipc mt net platform synlib ${libs} ${OPENSSL_LIBS})
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    install(TARGETS input-leapd DESTINATION ${INPUTLEAP_BUNDLE_BINARY_DIR})
+    install(TARGETS leapdesk-daemon DESTINATION ${INPUTLEAP_BUNDLE_BINARY_DIR})
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    install (TARGETS input-leapd DESTINATION bin)
+    install (TARGETS leapdesk-daemon DESTINATION bin)
 else()
-    install (TARGETS input-leapd DESTINATION .)
+    install (TARGETS leapdesk-daemon DESTINATION .)
 endif()

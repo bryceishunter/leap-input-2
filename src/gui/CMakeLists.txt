@@ -174,23 +174,23 @@ endif()
 set_source_files_properties("src/DisplayIsValid.cpp" PROPERTIES SKIP_UNITY_BUILD_INCLUSION TRUE)
 
 if (WIN32)
-    set (GUI_RC_FILES res/win/InputLeap.rc)
-    set_property(SOURCE res/win/InputLeap.rc PROPERTY COMPILE_FLAGS /nologo)
+    set (GUI_RC_FILES res/win/Leapdesk.rc)
+    set_property(SOURCE res/win/Leapdesk.rc PROPERTY COMPILE_FLAGS /nologo)
 endif()
 
-add_executable (input-leap WIN32
+add_executable (leapdesk WIN32
     ${GUI_COMMON_SOURCE_FILES}
     ${GUI_COMMON_HEADER_FILES}
     ${GUI_SOURCE_FILES}
     ${GUI_HEADER_FILES}
     ${GUI_UI_FILES}
     ${GUI_RC_FILES}
-    res/InputLeap.qrc
+    res/Leapdesk.qrc
 )
 
 include_directories (./src)
 
-target_link_libraries(input-leap
+target_link_libraries(leapdesk
     net
     arch
     base
@@ -200,33 +200,33 @@ target_link_libraries(input-leap
     Qt${QT_DEFAULT_MAJOR_VERSION}::Network
 )
 
-target_link_libraries(input-leap OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(leapdesk OpenSSL::SSL OpenSSL::Crypto)
 
-target_compile_definitions (input-leap PRIVATE -DINPUTLEAP_VERSION_STAGE="${INPUTLEAP_VERSION_STAGE}")
-target_compile_definitions (input-leap PRIVATE -DINPUTLEAP_REVISION="${INPUTLEAP_REVISION}")
+target_compile_definitions (leapdesk PRIVATE -DINPUTLEAP_VERSION_STAGE="${INPUTLEAP_VERSION_STAGE}")
+target_compile_definitions (leapdesk PRIVATE -DINPUTLEAP_REVISION="${INPUTLEAP_REVISION}")
 
 if (BUILD_MSWINDOWS)
     include_directories ($ENV{BONJOUR_SDK_HOME}/Include)
     find_library (DNSSD_LIB dnssd.lib
                   HINTS ENV BONJOUR_SDK_HOME
                   PATH_SUFFIXES "Lib/x64")
-    set_target_properties (input-leap PROPERTIES LINK_FLAGS "/NODEFAULTLIB:LIBCMT")
-    target_link_libraries (input-leap ${DNSSD_LIB})
+    set_target_properties (leapdesk PROPERTIES LINK_FLAGS "/NODEFAULTLIB:LIBCMT")
+    target_link_libraries (leapdesk ${DNSSD_LIB})
 endif()
 if (BUILD_CARBON)
     find_library(APPSERVICES_LIB ApplicationServices)
-    target_link_libraries(input-leap ${APPSERVICES_LIB})
+    target_link_libraries(leapdesk ${APPSERVICES_LIB})
 endif()
 if (BUILD_XWINDOWS OR BUILD_LIBEI)
-    target_link_libraries (input-leap dns_sd Threads::Threads)
+    target_link_libraries (leapdesk dns_sd Threads::Threads)
 endif()
 
-target_link_libraries (input-leap common)
+target_link_libraries (leapdesk common)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    install(TARGETS input-leap DESTINATION ${INPUTLEAP_BUNDLE_BINARY_DIR})
+    install(TARGETS leapdesk DESTINATION ${INPUTLEAP_BUNDLE_BINARY_DIR})
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "BSD")
-    install (TARGETS input-leap DESTINATION bin)
+    install (TARGETS leapdesk DESTINATION bin)
 elseif(WIN32)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION .)
     if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
@@ -235,12 +235,12 @@ elseif(WIN32)
     set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
     include(InstallRequiredSystemLibraries)
     add_custom_command(
-        TARGET input-leap POST_BUILD
+        TARGET leapdesk POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_BINARY_DIR}/qtDeploy"
         COMMAND ${QT_DEPLOY_TOOL} --no-compiler-runtime --no-system-d3d-compiler
-            --dir "${CMAKE_BINARY_DIR}/qtDeploy" $<TARGET_FILE:input-leap>
+            --dir "${CMAKE_BINARY_DIR}/qtDeploy" $<TARGET_FILE:leapdesk>
     )
-    install(TARGETS input-leap DESTINATION .)
+    install(TARGETS leapdesk DESTINATION .)
     install(
         DIRECTORY ${CMAKE_BINARY_DIR}/qtDeploy/
         DESTINATION .

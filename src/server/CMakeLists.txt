@@ -15,17 +15,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 set(sources
-    input-leaps.cpp
+    leapdesk-server.cpp
 )
 
 if (BUILD_MSWINDOWS)
     file(GLOB mswin_headers "MSWindows*.h")
     file(GLOB mswin_sources "MSWindows*.cpp")
     list(APPEND sources
-        input-leaps.exe.manifest
-        input-leaps.rc
+        leapdesk-server.exe.manifest
+        leapdesk-server.rc
     )
-    set_property(SOURCE input-leaps.rc PROPERTY COMPILE_FLAGS /nologo)
+    set_property(SOURCE leapdesk-server.rc PROPERTY COMPILE_FLAGS /nologo)
 endif()
 if (BUILD_CARBON)
     file(GLOB carbon_headers "OSX*.h")
@@ -47,14 +47,14 @@ if(INPUTLEAP_ADD_HEADERS)
     list(APPEND sources ${headers})
 endif()
 
-add_executable(input-leaps ${sources})
-target_link_libraries(input-leaps
+add_executable(leapdesk-server ${sources})
+target_link_libraries(leapdesk-server
     arch base client common io mt net ipc platform server synlib ${libs} OpenSSL::SSL OpenSSL::Crypto)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    install(TARGETS input-leaps DESTINATION ${INPUTLEAP_BUNDLE_BINARY_DIR})
+    install(TARGETS leapdesk-server DESTINATION ${INPUTLEAP_BUNDLE_BINARY_DIR})
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    install (TARGETS input-leaps DESTINATION bin)
+    install (TARGETS leapdesk-server DESTINATION bin)
 else()
-    install (TARGETS input-leaps DESTINATION .)
+    install (TARGETS leapdesk-server DESTINATION .)
 endif()

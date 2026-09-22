@@ -157,7 +157,7 @@ ClientApp::daemonName() const
 #if SYSAPI_WIN32
     return "InputLeap Client";
 #elif SYSAPI_UNIX
-    return "input-leapc";
+    return "leapdesk-client";
 #endif
 }
 
