@@ -1,21 +1,21 @@
-name: input-leap
+name: leapdesk-kvm
 base: core18
 version: master
 version-script: git describe --tags | sed "s/^v//"
 adopt-info: appstream-flathub
 grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: strict # use 'strict' once you have the right plugs and slots
-icon: res/input-leap.svg
+icon: res/leapdesk-kvm.svg
 license: GPL-2.0
 
 apps:
-  input-leap:
-    command: desktop-launch input-leap #first run might take longer
+  leapdesk-kvm:
+    command: desktop-launch leapdesk-kvm #first run might take longer
     environment:
       # Fallback to XWayland if running in a Wayland session.
       DISABLE_WAYLAND: 1
-    desktop: usr/share/applications/input-leap.desktop
-    common-id: io.github.input_leap.input-leap
+    desktop: usr/share/applications/leapdesk-kvm.desktop
+    common-id: io.github.bryceishunter.leapdesk-kvm
     plugs: &plugs
       - desktop
       - desktop-legacy
@@ -28,11 +28,11 @@ apps:
       - unity7
       - wayland
       - x11
-  input-leapc:
-    command: desktop-launch input-leapc
+  leapdesk-client:
+    command: desktop-launch leapdesk-client
     plugs: *plugs
-  input-leaps:
-    command: desktop-launch input-leaps
+  leapdesk-server:
+    command: desktop-launch leapdesk-server
     plugs: *plugs
 
 parts:
@@ -41,7 +41,7 @@ parts:
     source-subdir: qt
     plugin: make
 
-  input-leap:
+  leapdesk-kvm:
     source: .
     source-type: git
     plugin: cmake
@@ -81,10 +81,10 @@ parts:
   fix-icon:
     plugin: nil
     override-build:
-      sed -i 's|Icon=input-leap|Icon=/usr/share/icons/hicolor/scalable/apps/input-leap.svg|' $SNAPCRAFT_STAGE/usr/share/applications/input-leap.desktop
-    after: [input-leap]
+      sed -i 's|Icon=leapdesk-kvm|Icon=/usr/share/icons/hicolor/scalable/apps/leapdesk-kvm.svg|' $SNAPCRAFT_STAGE/usr/share/applications/leapdesk-kvm.desktop
+    after: [leapdesk-kvm]
 
   appstream-flathub:
     plugin: dump
-    source: https://github.com/flathub/com.github.input-leap.input-leap.git
-    parse-info: [io.github.input_leap.input-leap.appdata.xml]
+    source: https://github.com/flathub/com.github.leapdesk-kvm.leapdesk-kvm.git
+    parse-info: [io.github.bryceishunter.leapdesk-kvm.appdata.xml]

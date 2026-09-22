@@ -4,18 +4,18 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>English</string>
     <key>CFBundleDisplayName</key>
-    <string>InputLeap</string>
+    <string>Leapdesk</string>
     <key>CFBundleExecutable</key>
-    <string>input-leap</string>
+    <string>leapdesk</string>
     <key>CFBundleIconFile</key>
-    <string>InputLeap.icns</string>
+    <string>Leapdesk.icns</string>
     <key>CFBundleIdentifier</key>
-    <string>input-leap</string>
+    <string>leapdesk</string>
     <!-- TODO: Fix this in v2.0 //-->
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>InputLeap</string>
+    <string>Leapdesk</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleSignature</key>
@@ -29,7 +29,7 @@
     <key>NSHighResolutionCapable</key>
     <string>True</string>
     <key>NSHumanReadableCopyright</key>
-    <string>© InputLeap contributors</string>
+    <string>© Leapdesk KVM contributors</string>
     <key>LSMinimumSystemVersion</key>
     <string>10.12.0</string>
   </dict>

@@ -1,0 +1,6 @@
+The project is now Leapdesk KVM. The programs are `leapdesk-server`,
+`leapdesk-client` and `leapdesk-daemon`, the Windows service is `Leapdesk`, and
+settings live in `%LOCALAPPDATA%\Leapdesk` (`~/.config/Leapdesk` elsewhere) with
+the certificate as `Leapdesk.pem` and the default config as `leapdesk.sgc`.
+Nothing is migrated from an Input Leap installation: regenerate the
+certificates, re-pair the machines, and reinstall the service.

@@ -4,7 +4,7 @@ Share one keyboard and mouse across several computers. Move the pointer off the
 edge of one screen and it appears on the next machine; the clipboard follows.
 It works over any IP network — a LAN, Tailscale, WireGuard, whatever you have.
 
-Leapdesk KVM continues [Input Leap](https://github.com/input-leap/input-leap),
+Leapdesk KVM continues [Input Leap](https://github.com/bryceishunter/leapdesk-kvm),
 which is no longer maintained. Input Leap forked Barrier, which forked Synergy
 1.x, and the goal has not changed since: one keyboard and mouse, several
 machines, nothing else.
@@ -73,10 +73,10 @@ Screen names must match each machine's `--name` (its hostname by default).
 
 ```
 # on the server
-input-leaps.exe -f --name desktop -c leapdesk.conf
+leapdesk-server.exe -f --name desktop -c leapdesk.conf
 
 # on the other machine
-input-leapc.exe -f --name laptop 192.0.2.10:24800
+leapdesk-client.exe -f --name laptop 192.0.2.10:24800
 ```
 
 The server listens on TCP port 24800. The address must be the last argument on
@@ -86,7 +86,7 @@ the client. `--help` lists the rest.
 
 TLS is on by default, and each side checks the other's certificate fingerprint.
 The command-line tools do not create certificates — generate one per machine as
-`<profile>/SSL/InputLeap.pem` (on Windows, `%LOCALAPPDATA%\InputLeap`) and put
+`<profile>/SSL/Leapdesk.pem` (on Windows, `%LOCALAPPDATA%\Leapdesk`) and put
 each machine's SHA-256 fingerprint in the other's `SSL/Fingerprints/` file as
 `v2:sha256:<hex>`.
 

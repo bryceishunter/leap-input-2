@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=Input Leap
+Name=Leapdesk KVM
 Comment=Keyboard and mouse sharing solution
-Exec=input-leap
-Icon=io.github.input_leap.input-leap
+Exec=leapdesk
+Icon=io.github.bryceishunter.leapdesk-kvm
 Terminal=false
 Categories=Network
 Keywords=keyboard;mouse;sharing;network;share;

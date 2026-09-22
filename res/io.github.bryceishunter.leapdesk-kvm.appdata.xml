@@ -3,27 +3,27 @@
 <!-- Copyright 2018 Ding-Yi Chen <dchen@redhat.com> -->
 
 <component type="desktop-application">
-  <id>io.github.input_leap.input-leap</id>
+  <id>io.github.bryceishunter.leapdesk-kvm</id>
   <metadata_license>FSFAP</metadata_license>
   <project_license>GPL-2.0</project_license>
-  <name>InputLeap</name>
+  <name>Leapdesk KVM</name>
   <summary>Share mouse and keyboard between multiple computers over the network</summary>
-  <developer id="io.github.input_leap">
-    <name>Input Leap Team</name>
+  <developer id="io.github.bryceishunter">
+    <name>Leapdesk KVM contributors</name>
   </developer>
   <content_rating type="oars-1.1" />
 
   <description>
     <p>
-      InputLeap allows you to share one mouse and keyboard between multiple computers.
+      Leapdesk KVM allows you to share one mouse and keyboard between multiple computers.
       Work seamlessly across Windows, macOS and Linux.
     </p>
   </description>
 
-  <launchable type="desktop-id">io.github.input_leap.input-leap.desktop</launchable>
+  <launchable type="desktop-id">io.github.bryceishunter.leapdesk-kvm.desktop</launchable>
 
-  <url type="homepage">https://github.com/input-leap/input-leap</url>
-  <url type="bugtracker">https://github.com/input-leap/input-leap/issues</url>
+  <url type="homepage">https://github.com/bryceishunter/leapdesk-kvm</url>
+  <url type="bugtracker">https://github.com/bryceishunter/leapdesk-kvm/issues</url>
 
   <screenshots>
     <screenshot type="default">
@@ -53,10 +53,10 @@
   </branding>
 
   <provides>
-    <id>io.github.input_leap.input-leap.desktop</id>
-    <binary>input-leap</binary>
-    <binary>input-leapc</binary>
-    <binary>input-leaps</binary>
+    <id>io.github.bryceishunter.leapdesk-kvm.desktop</id>
+    <binary>leapdesk-kvm</binary>
+    <binary>leapdesk-client</binary>
+    <binary>leapdesk-server</binary>
   </provides>
 
 

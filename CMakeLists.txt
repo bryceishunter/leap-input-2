@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required(VERSION 3.21)
-project(InputLeap C CXX)
+project(Leapdesk C CXX)
 
 option(INPUTLEAP_BUILD_GUI "Build the GUI" ON)
 option(INPUTLEAP_BUILD_TESTS "Build the tests" ON)
@@ -291,23 +291,23 @@ if (APPLE)
     set (CMAKE_INSTALL_RPATH "@loader_path/../Libraries;@loader_path/../Frameworks")
     set(INPUTLEAP_BUNDLE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/dist/macos/bundle)
     set(INPUTLEAP_BUNDLE_DIR ${CMAKE_BINARY_DIR}/bundle)
-    set(INPUTLEAP_BUNDLE_APP_DIR ${INPUTLEAP_BUNDLE_DIR}/InputLeap.app)
+    set(INPUTLEAP_BUNDLE_APP_DIR ${INPUTLEAP_BUNDLE_DIR}/Leapdesk.app)
     set(INPUTLEAP_BUNDLE_BINARY_DIR ${INPUTLEAP_BUNDLE_APP_DIR}/Contents/MacOS)
 
     configure_files(${INPUTLEAP_BUNDLE_SOURCE_DIR} ${INPUTLEAP_BUNDLE_DIR})
 
-    add_custom_target(InputLeap_MacOS ALL
+    add_custom_target(Leapdesk_MacOS ALL
                       bash build_dist.sh
                       DEPENDS leapdesk leapdesk-server leapdesk-client
                       WORKING_DIRECTORY ${INPUTLEAP_BUNDLE_DIR})
 elseif (UNIX AND NOT APPLE)
-    install(FILES doc/input-leapc.1 doc/input-leaps.1 DESTINATION share/man/man1)
+    install(FILES doc/leapdesk-client.1 doc/leapdesk-server.1 DESTINATION share/man/man1)
 
-    install(FILES res/io.github.input_leap.input-leap.appdata.xml DESTINATION share/metainfo)
+    install(FILES res/io.github.bryceishunter.leapdesk-kvm.appdata.xml DESTINATION share/metainfo)
 
     configure_files (${CMAKE_CURRENT_SOURCE_DIR}/dist/rpm ${CMAKE_BINARY_DIR}/rpm)
-    install(FILES res/io.github.input_leap.input-leap.svg DESTINATION share/icons/hicolor/scalable/apps)
-    install(FILES res/io.github.input_leap.input-leap.desktop DESTINATION share/applications)
+    install(FILES res/io.github.bryceishunter.leapdesk-kvm.svg DESTINATION share/icons/hicolor/scalable/apps)
+    install(FILES res/io.github.bryceishunter.leapdesk-kvm.desktop DESTINATION share/applications)
 endif()
 
 #

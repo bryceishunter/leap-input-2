@@ -13,7 +13,7 @@ import yaml
 
 def get_all_workflow_artifacts(s, run_id):
     r = s.get(
-        f"https://api.github.com/repos/input-leap/input-leap/actions/runs/{run_id}/artifacts"
+        f"https://api.github.com/repos/bryceishunter/leapdesk-kvm/actions/runs/{run_id}/artifacts"
     )
     return {a["name"]: a["archive_download_url"] for a in r.json()["artifacts"]}
 
@@ -46,49 +46,49 @@ def main():
     received_artifacts = get_all_workflow_artifacts(s, workflow_run_id)
 
     artifacts_config = {
-        "input-leap-deb-debian-12": (
-            "input-leap_.*_amd64.deb",
-            f"InputLeap_{version}_debian12_amd64.deb",
+        "leapdesk-kvm-deb-debian-12": (
+            "leapdesk-kvm_.*_amd64.deb",
+            f"Leapdesk_{version}_debian12_amd64.deb",
         ),
-        "input-leap-deb-ubuntu-20-04": (
-            "input-leap_.*_amd64.deb",
-            f"InputLeap_{version}_ubuntu_20-04_amd64.deb",
+        "leapdesk-kvm-deb-ubuntu-20-04": (
+            "leapdesk-kvm_.*_amd64.deb",
+            f"Leapdesk_{version}_ubuntu_20-04_amd64.deb",
         ),
-        "input-leap-deb-ubuntu-22-04": (
-            "input-leap_.*_amd64.deb",
-            f"InputLeap_{version}_ubuntu_22-04_amd64.deb",
+        "leapdesk-kvm-deb-ubuntu-22-04": (
+            "leapdesk-kvm_.*_amd64.deb",
+            f"Leapdesk_{version}_ubuntu_22-04_amd64.deb",
         ),
-        "input-leap-deb-ubuntu-24-04": (
-            "input-leap_.*_amd64.deb",
-            f"InputLeap_{version}_ubuntu_24-04_amd64.deb",
+        "leapdesk-kvm-deb-ubuntu-24-04": (
+            "leapdesk-kvm_.*_amd64.deb",
+            f"Leapdesk_{version}_ubuntu_24-04_amd64.deb",
         ),
-        "input-leap-deb-ubuntu-24-10": (
-            "input-leap_.*_amd64.deb",
-            f"InputLeap_{version}_ubuntu_24-10_amd64.deb",
+        "leapdesk-kvm-deb-ubuntu-24-10": (
+            "leapdesk-kvm_.*_amd64.deb",
+            f"Leapdesk_{version}_ubuntu_24-10_amd64.deb",
         ),
-        "input-leap-rpms-fedora": (
-            "x86_64/input-leap-.*.fc40.x86_64.rpm",
-            f"InputLeap_{version}_fedora_fc40_x86_64.rpm",
+        "leapdesk-kvm-rpms-fedora": (
+            "x86_64/leapdesk-kvm-.*.fc40.x86_64.rpm",
+            f"Leapdesk_{version}_fedora_fc40_x86_64.rpm",
         ),
-        "input-leap-flatpak-x86_64": (
-            "input-leap.flatpak",
-            f"InputLeap_{version}_linux_x86_64.flatpak",
+        "leapdesk-kvm-flatpak-x86_64": (
+            "leapdesk-kvm.flatpak",
+            f"Leapdesk_{version}_linux_x86_64.flatpak",
         ),
         "macOS-Apple_Silicon-installer": (
-            "InputLeap-.*-release.dmg",
-            f"InputLeap_{version}_macos_AppleSilicon.dmg",
+            "Leapdesk-.*-release.dmg",
+            f"Leapdesk_{version}_macos_AppleSilicon.dmg",
         ),
         "macOS-x86_64-installer": (
-            "InputLeap-.*-release.dmg",
-            f"InputLeap_{version}_macos_x86_64.dmg",
+            "Leapdesk-.*-release.dmg",
+            f"Leapdesk_{version}_macos_x86_64.dmg",
         ),
         "windows-installer-Windows Qt5": (
-            "InputLeapSetup-.*-release.exe",
-            f"InputLeap_{version}_windows_qt5.exe",
+            "LeapdeskSetup-.*-release.exe",
+            f"Leapdesk_{version}_windows_qt5.exe",
         ),
         "windows-installer-Windows Qt6": (
-            "InputLeapSetup-.*-release.exe",
-            f"InputLeap_{version}_windows_qt6.exe",
+            "LeapdeskSetup-.*-release.exe",
+            f"Leapdesk_{version}_windows_qt6.exe",
         ),
     }
 

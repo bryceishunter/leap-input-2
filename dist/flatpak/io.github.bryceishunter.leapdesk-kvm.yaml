@@ -1,25 +1,25 @@
 # This is an example flatpak manifest only and needs some improvements.
 #
-# Notably: the input-leap-flatpak script is merely a shell wrapper that checks if
-# $XDG_CONFIG_HOME/InputLeap/server.name exists and if it does, it effectively runs
-#    input-leapc $that-server-name
+# Notably: the leapdesk-kvm-flatpak script is merely a shell wrapper that checks if
+# $XDG_CONFIG_HOME/Leapdesk/server.name exists and if it does, it effectively runs
+#    leapdesk-client $that-server-name
 # Otherwise, it tries to run
-#   input-leapc $XDG_CONFIG_HOME/InputLeap/InputLeap.conf
+#   leapdesk-client $XDG_CONFIG_HOME/Leapdesk/leapdesk.conf
 #
 # Note: mDNS (foo.local) does NOT work, so server.name needs to be a FQDN or an ip address
 # https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/issues/1013
 
-app-id: io.github.input_leap.input-leap
+app-id: io.github.bryceishunter.leapdesk-kvm
 runtime: org.kde.Platform
 runtime-version: '6.7'
 sdk: org.kde.Sdk
-command: input-leap
+command: leapdesk
 
 finish-args:
     # We want to talk to the network
     - --share=network
     # Need to read our config from somewhere
-    - --filesystem=xdg-config/InputLeap
+    - --filesystem=xdg-config/Leapdesk
     - --socket=wayland
     - --socket=fallback-x11 
     - --device=dri
@@ -79,7 +79,7 @@ modules:
             url: https://github.com/libevent/libevent
             tag: release-2.1.12-stable
 
-    # Required by inputleap
+    # Required by leapdesk-kvm
     - name: avahi
       buildsystem: autotools
       config-opts:
@@ -101,7 +101,7 @@ modules:
             url: https://github.com/lathiat/avahi
             tag: v0.8
 
-    # Required by inputleap
+    # Required by leapdesk-kvm
     - name: libportal
       buildsystem: meson
       config-opts:
@@ -116,7 +116,7 @@ modules:
           - type: git
             url: https://github.com/flatpak/libportal.git
             branch: 0.8.1
-    - name: input-leap
+    - name: leapdesk-kvm
       buildsystem: cmake
       config-opts:
           - -DQT_DEFAULT_MAJOR_VERSION=6
@@ -126,5 +126,5 @@ modules:
           - -DINPUTLEAP_BUILD_LIBEI=ON
       sources:
           - type: git
-            url: https://github.com/input-leap/input-leap
+            url: https://github.com/bryceishunter/leapdesk-kvm
             branch: master

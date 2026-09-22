@@ -1,19 +1,19 @@
 %global package_version @INPUTLEAP_VERSION_MAJOR@.@INPUTLEAP_VERSION_MINOR@.@INPUTLEAP_VERSION_PATCH@
-%global tarname InputLeap-%{version}-Source
-%global input_leap_version_desc @INPUTLEAP_VERSION_DESC@
+%global tarname Leapdesk-%{version}-Source
+%global leapdesk_version_desc @INPUTLEAP_VERSION_DESC@
 %global timestamp @INPUTLEAP_BUILD_DATE@@INPUTLEAP_BUILD_TIME@
 
-%global rdnn_name io.github.input_leap.input-leap
+%global rdnn_name io.github.bryceishunter.leapdesk-kvm
 
 Summary: Keyboard and mouse sharing solution
-Name: input-leap
+Name: leapdesk-kvm
 Version: %{package_version}
 Release: %{timestamp}.git%{?dist}
 # FIXME: Does not work with RPMs, address later.
-# FIXME: %%{input_leap_version_desc}%%{?dist}
+# FIXME: %%{leapdesk_version_desc}%%{?dist}
 License: GPLv2
 Group: System Environment/Daemons
-URL: https://github.com/input-leap/input-leap
+URL: https://github.com/bryceishunter/leapdesk-kvm
 # Run cmake package_source to get this tarball
 Source0: %{tarname}.tar.xz
 
@@ -36,7 +36,7 @@ BuildRequires: pkgconfig(libei-1.0)
 BuildRequires: pkgconfig(libportal) >= 0.8
 
 %description
-InputLeap allows you to share one mouse and keyboard between multiple computers.
+Leapdesk KVM allows you to share one mouse and keyboard between multiple computers.
 Work seamlessly across Windows, macOS and Linux.
 
 %prep
@@ -45,7 +45,7 @@ Work seamlessly across Windows, macOS and Linux.
 
 %build
 %{cmake} . \
-    -DINPUTLEAP_VERSION_DESC:STRING=%{input_leap_version_desc} \
+    -DINPUTLEAP_VERSION_DESC:STRING=%{leapdesk_version_desc} \
     -DINPUTLEAP_BUILD_LIBEI=ON \
     -DINPUTLEAP_BUILD_TESTS=ON \
     -DINPUTLEAP_USE_EXTERNAL_GTEST=True \
