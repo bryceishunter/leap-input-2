@@ -1,9 +1,4 @@
-Thank you for choosing InputLeap!
-https://github.com/input-leap/input-leap/
+Leapdesk KVM
+https://github.com/bryceishunter/leapdesk-kvm
 
-InputLeap allows you to share your keyboard and mouse between computers over a network.
-
-Have fun!
-
-Thanks,
-The InputLeap Team
+Share one keyboard and mouse across several computers over a network.
