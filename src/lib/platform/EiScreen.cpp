@@ -128,7 +128,7 @@ void EiScreen::init_ei()
     ei_set_user_data(ei_, this);
     ei_log_set_priority(ei_, EI_LOG_PRIORITY_DEBUG);
     ei_log_set_handler(ei_, cb_handle_ei_log_event);
-    ei_configure_name(ei_, "InputLeap client");
+    ei_configure_name(ei_, "Leapdesk KVM client");
 
     // install the platform event queue
     events_->set_buffer(nullptr);

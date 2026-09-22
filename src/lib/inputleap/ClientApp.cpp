@@ -113,7 +113,7 @@ void
 ClientApp::help()
 {
     std::ostringstream buffer;
-    buffer << "Start the InputLeap client and connect to a remote server component.\n"
+    buffer << "Start the Leapdesk KVM client and connect to a remote server component.\n"
            << "\n"
            << "Usage: " << args().m_exename << " [--yscroll <delta>]"
 #ifdef WINAPI_XWINDOWS
@@ -155,7 +155,7 @@ const char*
 ClientApp::daemonName() const
 {
 #if SYSAPI_WIN32
-    return "InputLeap Client";
+    return "Leapdesk Client";
 #elif SYSAPI_UNIX
     return "leapdesk-client";
 #endif

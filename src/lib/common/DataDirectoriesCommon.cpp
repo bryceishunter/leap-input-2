@@ -22,7 +22,7 @@ void maybe_copy_old_profile_cert(const fs::path& old_profile_path,
                                  const fs::path& curr_profile_path)
 {
     auto old_cert_path = curr_profile_path / "SSL" / "Barrier.pem";
-    auto new_cert_path = curr_profile_path / "SSL" / "InputLeap.pem";
+    auto new_cert_path = curr_profile_path / "SSL" / "Leapdesk.pem";
     if (fs::is_regular_file(old_cert_path) && !fs::exists(new_cert_path)) {
         fs::rename(old_cert_path, new_cert_path);
     }

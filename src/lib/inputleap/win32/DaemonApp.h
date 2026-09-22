@@ -55,6 +55,6 @@ private:
     FileLogOutputter* m_fileLogOutputter;
 };
 
-#define LOG_FILENAME "input-leapd.log"
+#define LOG_FILENAME "leapdesk-daemon.log"
 
 } // namespace inputleap

@@ -63,14 +63,14 @@ namespace {
 static const QString allFilesFilter(QObject::tr("All files (*.*)"));
 #if defined(Q_OS_WIN)
 static const char APP_CONFIG_NAME[] = "input-leap.sgc";
-static const QString APP_CONFIG_FILTER(QObject::tr("InputLeap Configurations (*.sgc)"));
+static const QString APP_CONFIG_FILTER(QObject::tr("Leapdesk KVM Configurations (*.sgc)"));
 static QString bonjourBaseUrl = "http://binaries.symless.com/bonjour/";
 static const char bonjourFilename32[] = "Bonjour.msi";
 static const char bonjourFilename64[] = "Bonjour64.msi";
 static const char bonjourTargetFilename[] = "Bonjour.msi";
 #else
 static const char APP_CONFIG_NAME[] = "input-leap.conf";
-static const QString APP_CONFIG_FILTER(QObject::tr("InputLeap Configurations (*.conf)"));
+static const QString APP_CONFIG_FILTER(QObject::tr("Leapdesk KVM Configurations (*.conf)"));
 #endif
 static const QString APP_CONFIG_OPEN_FILTER(APP_CONFIG_FILTER + ";;" + allFilesFilter);
 static const QString APP_CONFIG_SAVE_FILTER(APP_CONFIG_FILTER);
@@ -136,7 +136,7 @@ MainWindow::MainWindow(QSettings& settings, AppConfig& appConfig) :
     m_pLogWindow(new LogWindow(nullptr))
 {
     // explicitly unset DeleteOnClose so the window can be show and hidden
-    // repeatedly until InputLeap is finished
+    // repeatedly until Leapdesk KVM is finished
     setAttribute(Qt::WA_DeleteOnClose, false);
     // mark the windows as sort of "dialog" window so that tiling window
     // managers will float it by default (X11)
@@ -234,8 +234,8 @@ void MainWindow::open()
     }
 
     // only start if user has previously started. this stops the gui from
-    // auto hiding before the user has configured InputLeap (which of course
-    // confuses first time users, who think InputLeap has crashed).
+    // auto hiding before the user has configured Leapdesk KVM (which of course
+    // confuses first time users, who think Leapdesk KVM has crashed).
     if (appConfig().startedBefore() && appConfig().getAutoStart()) {
         m_SuppressEmptyServerWarning = true;
         start_cmd_app();
@@ -265,7 +265,7 @@ void MainWindow::createTrayIcon()
 
     m_pTrayIcon = new QSystemTrayIcon(this);
     m_pTrayIcon->setContextMenu(m_pTrayIconMenu);
-    m_pTrayIcon->setToolTip("InputLeap");
+    m_pTrayIcon->setToolTip("Leapdesk KVM");
 
     connect(m_pTrayIcon, &QSystemTrayIcon::activated, this, &MainWindow::trayActivated);
 
@@ -277,7 +277,7 @@ void MainWindow::createTrayIcon()
 void MainWindow::retranslateMenuBar()
 {
 #ifndef Q_OS_DARWIN
-    main_menu_->setTitle(tr("&InputLeap"));
+    main_menu_->setTitle(tr("&Leapdesk KVM"));
     m_pMenuHelp->setTitle(tr("&Help"));
 #else
     m_pMenuHelp->setTitle(tr("&File"));
@@ -465,9 +465,9 @@ void MainWindow::checkConnected(const QString& line)
 
         if (!appConfig().startedBefore() && isVisible()) {
                 QMessageBox::information(
-                    this, "InputLeap",
-                    tr("InputLeap is now connected. You can close the "
-                    "config window and InputLeap will remain connected in "
+                    this, "Leapdesk KVM",
+                    tr("Leapdesk KVM is now connected. You can close the "
+                    "config window and Leapdesk KVM will remain connected in "
                     "the background."));
 
             appConfig().setStartedBefore(true);
@@ -519,7 +519,7 @@ void MainWindow::checkFingerprint(const QString& line)
     }
 
     // We compare only SHA256 fingerprints, but show both SHA1 and SHA256 so that the users can
-    // still verify fingerprints on old InputLeap servers. This way the only time when we are
+    // still verify fingerprints on old Leapdesk KVM servers. This way the only time when we are
     // exposed to SHA1 vulnerabilities is when the user is reconnecting again.
     inputleap::FingerprintDatabase db;
     db.read(db_path);
@@ -593,9 +593,9 @@ void MainWindow::start_cmd_app()
         // is switched; this is because we may need to elevate or not
         // based on which desk the user is in (login always needs
         // elevation, where as default desk does not).
-        // Note that this is only enabled when InputLeap is set to elevate
+        // Note that this is only enabled when Leapdesk KVM is set to elevate
         // 'as needed' (e.g. on a UAC dialog popup) in order to prevent
-        // unnecessary restarts when InputLeap was started elevated or
+        // unnecessary restarts when Leapdesk KVM was started elevated or
         // when it is not allowed to elevate. In these cases restarting
         // the server is fruitless.
         if (appConfig().elevateMode() == ElevateAsNeeded) {
@@ -683,8 +683,8 @@ bool MainWindow::clientArgs(QStringList& args, QString& app)
     if (!QFile::exists(app))
     {
         show();
-        QMessageBox::warning(this, tr("InputLeap client not found"),
-                             tr("The executable for the InputLeap client does not exist."));
+        QMessageBox::warning(this, tr("Leapdesk KVM client not found"),
+                             tr("The executable for the Leapdesk KVM client does not exist."));
         return false;
     }
 
@@ -711,7 +711,7 @@ bool MainWindow::clientArgs(QStringList& args, QString& app)
         show();
         if (!m_SuppressEmptyServerWarning) {
             QMessageBox::warning(this, tr("Hostname is empty"),
-                             tr("Please fill in a hostname for the InputLeap client to connect to."));
+                             tr("Please fill in a hostname for the Leapdesk KVM client to connect to."));
         }
         return false;
     }
@@ -732,7 +732,7 @@ QString MainWindow::configFilename()
         if (!m_pTempConfigFile->open())
         {
             QMessageBox::critical(this, tr("Cannot write configuration file"),
-                                  tr("The temporary configuration file required to start InputLeap can not be written."));
+                                  tr("The temporary configuration file required to start Leapdesk KVM can not be written."));
             return "";
         }
 
@@ -746,7 +746,7 @@ QString MainWindow::configFilename()
         if (!QFile::exists(ui_->m_pLineEditConfigFile->text()))
         {
             if (QMessageBox::warning(this, tr("Configuration filename invalid"),
-                tr("You have not filled in a valid configuration file for the InputLeap server. "
+                tr("You have not filled in a valid configuration file for the Leapdesk KVM server. "
                         "Do you want to browse for the configuration file now?"), QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes
                     || !on_m_pButtonBrowseConfigFile_clicked())
                 return "";
@@ -786,8 +786,8 @@ bool MainWindow::serverArgs(QStringList& args, QString& app)
 
     if (!QFile::exists(app))
     {
-        QMessageBox::warning(this, tr("InputLeap server not found"),
-                             tr("The executable for the InputLeap server does not exist."));
+        QMessageBox::warning(this, tr("Leapdesk KVM server not found"),
+                             tr("The executable for the Leapdesk KVM server does not exist."));
         return false;
     }
 
@@ -858,7 +858,7 @@ void MainWindow::stopDesktop()
         return;
     }
 
-    appendLogInfo("stopping InputLeap desktop process");
+    appendLogInfo("stopping Leapdesk KVM desktop process");
 
     if (cmd_app_process_->isOpen()) {
 #if SYSAPI_UNIX
@@ -928,17 +928,17 @@ void MainWindow::set_connection_state(AppConnectionState state)
             ui_->m_pLabelPadlock->hide();
         }
 
-        setStatus(tr("InputLeap is running."));
+        setStatus(tr("Leapdesk KVM is running."));
 
         break;
     }
     case AppConnectionState::CONNECTING:
         ui_->m_pLabelPadlock->hide();
-        setStatus(tr("InputLeap is starting."));
+        setStatus(tr("Leapdesk KVM is starting."));
         break;
     case AppConnectionState::DISCONNECTED:
         ui_->m_pLabelPadlock->hide();
-        setStatus(tr("InputLeap is not running."));
+        setStatus(tr("Leapdesk KVM is not running."));
         break;
     case AppConnectionState::TRANSFERRING:
         break;
@@ -1151,7 +1151,7 @@ void MainWindow::on_m_pGroupServer_toggled(bool on)
 
 bool MainWindow::on_m_pButtonBrowseConfigFile_clicked()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Browse for a InputLeap config file"), QString(), APP_CONFIG_OPEN_FILTER);
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Browse for a Leapdesk KVM config file"), QString(), APP_CONFIG_OPEN_FILTER);
 
     if (!fileName.isEmpty())
     {
@@ -1301,7 +1301,7 @@ void MainWindow::downloadBonjour()
     }
     else {
         QMessageBox::critical(
-            this, tr("InputLeap"),
+            this, tr("Leapdesk KVM"),
             tr("Failed to detect system architecture."));
         return;
     }
@@ -1315,7 +1315,7 @@ void MainWindow::downloadBonjour()
 
     if (m_DownloadMessageBox == nullptr) {
         m_DownloadMessageBox = new QMessageBox(this);
-        m_DownloadMessageBox->setWindowTitle("InputLeap");
+        m_DownloadMessageBox->setWindowTitle("Leapdesk KVM");
         m_DownloadMessageBox->setIcon(QMessageBox::Information);
         m_DownloadMessageBox->setText("Installing Bonjour, please wait...");
 #if QT_VERSION_MAJOR < 6
@@ -1350,7 +1350,7 @@ void MainWindow::installBonjour()
         m_DownloadMessageBox->hide();
 
         QMessageBox::warning(
-            this, "InputLeap",
+            this, "Leapdesk KVM",
             tr("Failed to download Bonjour installer to location: %1")
             .arg(tempLocation));
         return;
@@ -1386,7 +1386,7 @@ void MainWindow::promptAutoConfig()
 {
     if (!isBonjourRunning()) {
         int r = QMessageBox::question(
-            this, tr("InputLeap"),
+            this, tr("Leapdesk KVM"),
             tr("Do you want to enable auto config and install Bonjour?\n\n"
                "This feature helps you establish the connection."),
             QMessageBox::Yes | QMessageBox::No);
@@ -1416,7 +1416,7 @@ void MainWindow::on_m_pCheckBoxAutoConfig_toggled(bool checked)
     if (!isBonjourRunning() && checked) {
         if (!m_SuppressAutoConfigWarning) {
             int r = QMessageBox::information(
-                this, tr("InputLeap"),
+                this, tr("Leapdesk KVM"),
                 tr("Auto config feature requires Bonjour.\n\n"
                    "Do you want to install Bonjour?"),
                 QMessageBox::Yes | QMessageBox::No);

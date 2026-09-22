@@ -71,8 +71,8 @@ int main(int argc, char* argv[])
         // We're running on X11, all good.
         // Continue running.
     } else if (platformType == "wayland") {
-        QMessageBox::information(nullptr, "Input Leap",
-                                 "You are using Wayland. Input Leap supports Wayland via `libei` "
+        QMessageBox::information(nullptr, "Leapdesk KVM",
+                                 "You are using Wayland. Leapdesk KVM supports Wayland via `libei` "
                                  "but not all desktop environment/window managers support our "
                                  "implementation at this time. Therefore, your mileage may vary.");
     }
@@ -82,9 +82,9 @@ int main(int argc, char* argv[])
     /* Workaround for QTBUG-40332 - "High ping when QNetworkAccessManager is instantiated" */
     ::setenv ("QT_BEARER_POLL_TIMEOUT", "-1", 1);
 #endif
-    QCoreApplication::setOrganizationName("InputLeap");
+    QCoreApplication::setOrganizationName("Leapdesk");
 	QCoreApplication::setOrganizationDomain("github.com");
-    QCoreApplication::setApplicationName("InputLeap");
+    QCoreApplication::setApplicationName("Leapdesk");
 
     QInputLeapApplication app(argc, argv);
 
@@ -98,10 +98,10 @@ int main(int argc, char* argv[])
         // Unfortunately, there's no user-friendly way to allow assistive access
         // to applications that are not in default paths (/Applications),
         // especially if an identically named application already exists in
-        // /Applications). Thus we require InputLeap to reside in the /Applications
+        // /Applications). Thus we require Leapdesk KVM to reside in the /Applications
         // folder
-        QMessageBox::information(nullptr, "InputLeap",
-                                 "Please drag InputLeap to the Applications folder, "
+        QMessageBox::information(nullptr, "Leapdesk KVM",
+                                 "Please drag Leapdesk KVM to the Applications folder, "
                                  "and open it from there.");
 		return 1;
 	}
@@ -180,7 +180,7 @@ bool checkMacAssistiveDevices()
 	// new in mavericks, applications are trusted individually
 	// with use of the accessibility api. this call will show a
 	// prompt which can show the security/privacy/accessibility
-    // tab, with a list of allowed applications. InputLeap should
+    // tab, with a list of allowed applications. Leapdesk KVM should
 	// show up there automatically, but will be unchecked.
 
 	if (AXIsProcessTrusted()) {
@@ -201,10 +201,10 @@ bool checkMacAssistiveDevices()
 	bool result = AXAPIEnabled();
 	if (!result) {
 		QMessageBox::information(
-            nullptr, "InputLeap",
+            nullptr, "Leapdesk KVM",
 			"Please enable access to assistive devices "
 			"System Preferences -> Security & Privacy -> "
-            "Privacy -> Accessibility, then re-open InputLeap.");
+            "Privacy -> Accessibility, then re-open Leapdesk KVM.");
 	}
 	return result;
 

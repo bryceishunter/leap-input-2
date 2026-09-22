@@ -482,7 +482,7 @@
   </action>
  </widget>
  <resources>
-  <include location="../res/InputLeap.qrc"/>
+  <include location="../res/Leapdesk.qrc"/>
  </resources>
  <connections>
   <connection>

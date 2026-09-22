@@ -143,13 +143,12 @@ private:
     std::string m_commandLine;
 };
 
-#define DEFAULT_DAEMON_NAME _T("InputLeap")
-#define DEFAULT_DAEMON_INFO _T("Manages the InputLeap foreground processes.")
+#define DEFAULT_DAEMON_NAME _T("Leapdesk")
+#define DEFAULT_DAEMON_INFO _T("Manages the Leapdesk KVM foreground processes.")
 
 static const TCHAR* const g_daemonKeyPath[] = {
     _T("SOFTWARE"),
-    _T("The InputLeap Project"),
-    _T("InputLeap"),
+    _T("Leapdesk"),
     _T("Service"),
     nullptr
 };

@@ -201,7 +201,7 @@ void generate_pem_self_signed_cert(const std::string& path)
     }
     auto name_free = finally([name]() { X509_NAME_free(name); });
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
-                               reinterpret_cast<const unsigned char *>("InputLeap"), -1, -1, 0);
+                               reinterpret_cast<const unsigned char *>("Leapdesk"), -1, -1, 0);
     X509_set_subject_name(cert, name);
     X509_set_issuer_name(cert, name);
 

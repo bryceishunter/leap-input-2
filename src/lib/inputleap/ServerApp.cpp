@@ -123,7 +123,7 @@ ServerApp::help()
                             inputleap::fs::u8path(CONFIG_NAME)).u8string();
 
     std::ostringstream buffer;
-    buffer << "Start the InputLeap server component. The server shares the keyboard &\n"
+    buffer << "Start the Leapdesk KVM server component. The server shares the keyboard &\n"
            << "mouse of the local machine with the connected clients based on the\n"
            << "configuration file.\n"
            << "\n"
@@ -872,7 +872,7 @@ const char*
 ServerApp::daemonName() const
 {
 #if SYSAPI_WIN32
-    return "InputLeap Server";
+    return "Leapdesk Server";
 #elif SYSAPI_UNIX
     return "leapdesk-server";
 #endif

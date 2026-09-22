@@ -90,10 +90,10 @@ static fs::path old_profile_basedir()
 const fs::path& DataDirectories::profile()
 {
     if (_profile.empty()) {
-        _profile = profile_basedir() / "InputLeap";
+        _profile = profile_basedir() / "Leapdesk";
         maybe_copy_old_profile(profile_basedir() / "barrier", _profile);
 #if defined(WINAPI_XWINDOWS) || defined(WINAPI_LIBEI)
-        maybe_copy_old_profile(old_profile_basedir() / "InputLeap", _profile);
+        maybe_copy_old_profile(old_profile_basedir() / "Leapdesk", _profile);
 #endif
     }
     return _profile;

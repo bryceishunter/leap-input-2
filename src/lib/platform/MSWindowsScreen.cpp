@@ -136,7 +136,7 @@ MSWindowsScreen::MSWindowsScreen(
 
         updateScreenShape();
         m_class       = createWindowClass();
-        m_window      = createWindow(m_class, "InputLeap");
+        m_window      = createWindow(m_class, "Leapdesk");
         forceShowCursor();
         LOG_DEBUG("screen shape: %d,%d %dx%d %s", m_x, m_y, m_w, m_h, m_multimon ? "(multi-monitor)" : "");
         LOG_DEBUG("window is 0x%08x", m_window);
@@ -818,7 +818,7 @@ MSWindowsScreen::createWindowClass() const
     classInfo.hCursor = nullptr;
     classInfo.hbrBackground = nullptr;
     classInfo.lpszMenuName = nullptr;
-    classInfo.lpszClassName = "InputLeap";
+    classInfo.lpszClassName = "Leapdesk";
     classInfo.hIconSm = nullptr;
     return RegisterClassEx(&classInfo);
 }
