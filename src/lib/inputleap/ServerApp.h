@@ -114,6 +114,17 @@ public:
 private:
     std::unique_ptr<IPlatformScreen> create_platform_screen();
     void handle_screen_switched(const Event& event);
+
+    // Reloads the configuration once its file changes and then stays the same
+    // for a moment, so edits from the settings window or by hand apply
+    // without a restart; a file that fails to parse leaves the old one in use.
+    void start_watching_config_file();
+    void stop_watching_config_file();
+    void check_config_file();
+
+    EventQueueTimer* config_watch_timer_ = nullptr;
+    std::string config_file_stamp_;
+    bool config_file_changing_ = false;
 };
 
 // configuration file name

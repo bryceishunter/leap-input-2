@@ -37,6 +37,7 @@
 #include "base/log_outputters.h"
 #include "base/IEventQueue.h"
 #include "base/Log.h"
+#include "io/filesystem.h"
 #include "common/Version.h"
 #include "common/DataDirectories.h"
 
@@ -252,6 +253,64 @@ ServerApp::loadConfig()
     if (!loaded) {
         LOG_PRINT("%s: no configuration available", args().m_exename.c_str());
         m_bye(kExitConfig);
+    }
+}
+
+namespace {
+
+// size and modification time, enough to tell that a file was written
+std::string config_file_stamp(const std::string& pathname)
+{
+    std::error_code error;
+    inputleap::fs::path path = inputleap::fs::u8path(pathname);
+    auto size = inputleap::fs::file_size(path, error);
+    if (error) {
+        return "missing";
+    }
+    auto time = inputleap::fs::last_write_time(path, error);
+    if (error) {
+        return "missing";
+    }
+    return std::to_string(size) + ":" + std::to_string(time.time_since_epoch().count());
+}
+
+} // namespace
+
+void ServerApp::start_watching_config_file()
+{
+    if (args().m_configFile.empty()) {
+        return;
+    }
+    config_file_stamp_ = config_file_stamp(args().m_configFile);
+    config_file_changing_ = false;
+    config_watch_timer_ = m_events->newTimer(1.0, nullptr);
+    m_events->add_handler(EventType::TIMER, config_watch_timer_,
+                          [this](const auto&) { check_config_file(); });
+}
+
+void ServerApp::stop_watching_config_file()
+{
+    if (config_watch_timer_ == nullptr) {
+        return;
+    }
+    m_events->remove_handler(EventType::TIMER, config_watch_timer_);
+    m_events->deleteTimer(config_watch_timer_);
+    config_watch_timer_ = nullptr;
+}
+
+void ServerApp::check_config_file()
+{
+    std::string stamp = config_file_stamp(args().m_configFile);
+    if (stamp != config_file_stamp_) {
+        // wait for the next check, so that a file still being written is not read
+        config_file_stamp_ = stamp;
+        config_file_changing_ = true;
+        return;
+    }
+    if (config_file_changing_ && stamp != "missing") {
+        config_file_changing_ = false;
+        LOG_NOTE("configuration file changed");
+        reload_config();
     }
 }
 
@@ -759,6 +818,7 @@ ServerApp::mainLoop()
     ARCH->setSignalHandler(Arch::kHANGUP, &reloadSignalHandler, nullptr);
     m_events->add_handler(EventType::SERVER_APP_RELOAD_CONFIG, m_events->getSystemTarget(),
                           [this](const auto& e){ reload_config(); });
+    start_watching_config_file();
 
     // handle force reconnect event by disconnecting clients.  they'll
     // reconnect automatically.
@@ -795,6 +855,7 @@ ServerApp::mainLoop()
     LOG_DEBUG1("stopping server");
     m_events->remove_handler(EventType::SERVER_APP_FORCE_RECONNECT, m_events->getSystemTarget());
     m_events->remove_handler(EventType::SERVER_APP_RELOAD_CONFIG, m_events->getSystemTarget());
+    stop_watching_config_file();
     cleanupServer();
     updateStatus();
     LOG_NOTE("stopped server");
