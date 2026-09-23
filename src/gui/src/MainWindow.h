@@ -137,6 +137,7 @@ public slots:
         void createTrayIcon();
         void loadSettings();
         void loadServerConfig();
+        QString installedServiceCommand();
         bool saveServerConfig();
         void saveSettings();
         void set_icon(AppConnectionState state);

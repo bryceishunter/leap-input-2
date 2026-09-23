@@ -710,8 +710,30 @@ void MainWindow::start_cmd_app()
     if (serviceMode)
     {
         QString command(app + " " + args.join(" "));
-        m_IpcClient.sendCommand(command, appConfig().elevateMode());
+        ElevateMode elevate = appConfig().elevateMode();
+
+        // A service set up by the installer comes with its own command line (screen name,
+        // profile, certificates, config file). Starting it from here must not replace that
+        // with one built from this window's settings.
+        QString installed = installedServiceCommand();
+        if (!installed.isEmpty()) {
+            command = installed;
+            elevate = ElevateAlways;
+            appendLogInfo("using the command the installer set up for the service");
+        }
+
+        m_IpcClient.sendCommand(command, elevate);
     }
+}
+
+QString MainWindow::installedServiceCommand()
+{
+#if defined(Q_OS_WIN)
+    QSettings service(QStringLiteral("HKEY_LOCAL_MACHINE\\SOFTWARE\\Leapdesk"), QSettings::NativeFormat);
+    return service.value(QStringLiteral("InstalledCommand")).toString();
+#else
+    return QString();
+#endif
 }
 
 void MainWindow::setServerMode(bool isServerMode)
