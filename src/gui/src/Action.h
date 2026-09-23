@@ -54,6 +54,10 @@ class Action
 
     public:
         QString text() const;
+
+        // parses one action as text() writes it; returns false for anything
+        // this class can't represent
+        static bool fromText(const QString& text, bool activeOnRelease, Action& action);
         const KeySequence& keySequence() const { return key_sequence_; }
         void setKeySequence(const KeySequence& seq) { key_sequence_ = seq; }
 

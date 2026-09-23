@@ -22,17 +22,28 @@
 #include "ServerConfig.h"
 #include "HotkeyDialog.h"
 #include "ActionDialog.h"
+#include "LinkDialog.h"
+#include "ScreenLayoutView.h"
+#include "ScreenSettingsDialog.h"
 
 #include <QtCore>
 #include <QtGui>
+#include <QHeaderView>
+#include <QInputDialog>
 #include <QMessageBox>
+
+static QString stretchLabel(double start, double end)
+{
+    if (start == 0 && end == 100)
+        return QObject::tr("whole edge");
+    return QObject::tr("%1 to %2 %").arg(QString::number(start), QString::number(end));
+}
 
 ServerConfigDialog::ServerConfigDialog(QWidget* parent, ServerConfig& config, const QString& defaultScreenName) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint),
     ui_{std::make_unique<Ui::ServerConfigDialog>()},
     m_OrigServerConfig(config),
     m_ServerConfig(config),
-    m_ScreenSetupModel(serverConfig().screens(), serverConfig().numColumns(), serverConfig().numRows()),
     m_Message("")
 {
     ui_->setupUi(this);
@@ -68,14 +79,73 @@ ServerConfigDialog::ServerConfigDialog(QWidget* parent, ServerConfig& config, co
         ui_->m_pListHotkeys->addItem(hotkey.text());
     }
 
-    ui_->m_pScreenSetupView->setModel(&m_ScreenSetupModel);
+    ui_->m_pListPreservedRules->addItems(serverConfig().preservedRules());
+    ui_->m_pGroupPreservedRules->setVisible(!serverConfig().preservedRules().isEmpty());
 
-    if (serverConfig().numScreens() == 0)
-        model().screen(serverConfig().numColumns() / 2, serverConfig().numRows() / 2) = Screen(defaultScreenName);
+    if (serverConfig().numScreens() == 0 && !defaultScreenName.isEmpty())
+        serverConfig().screens().push_back(Screen(defaultScreenName));
+
+    ui_->m_pTableLinks->setColumnCount(5);
+    ui_->m_pTableLinks->setHorizontalHeaderLabels(
+        {tr("From screen"), tr("Edge"), tr("Stretch"), tr("To screen"), tr("Stretch")});
+    ui_->m_pTableLinks->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
+    // the drawing and the table show the same links; selecting in one selects in the other
+    ScreenLayoutView* view = ui_->m_pLayoutView;
+    view->setConfiguration(&serverConfig().screens(), &serverConfig().links(),
+                           serverConfig().serverName());
+    connect(view, &ScreenLayoutView::screenSelected, this, [this] {
+        ui_->m_pTableLinks->clearSelection();
+        updateScreenButtons();
+    });
+    connect(view, &ScreenLayoutView::screenActivated, this, [this] {
+        updateScreenButtons();
+        on_m_pButtonEditScreen_clicked();
+    });
+    connect(view, &ScreenLayoutView::linkSelected, this, [this](int index) {
+        ui_->m_pTableLinks->selectRow(index);
+        updateScreenButtons();
+    });
+    connect(view, &ScreenLayoutView::linkActivated, this, [this](int index) {
+        ui_->m_pTableLinks->selectRow(index);
+        on_m_pButtonEditLink_clicked();
+    });
+    connect(view, &ScreenLayoutView::linkEdited, this, [this] { updateLinkRows(); });
+
+    refreshScreens();
+    refreshLinks();
+}
+
+void ServerConfigDialog::showEvent(QShowEvent* event)
+{
+    QDialog::showEvent(event);
+    if (!m_Message.isEmpty()) {
+        QString message = m_Message;
+        m_Message.clear();
+        QTimer::singleShot(0, this, [this, message] {
+            QMessageBox::information(this, windowTitle(), message);
+        });
+    }
 }
 
 void ServerConfigDialog::accept()
 {
+    bool hasServerScreen = false;
+    for (const Screen& screen : serverConfig().screens()) {
+        if (screen.name().compare(serverConfig().serverName(), Qt::CaseInsensitive) == 0)
+            hasServerScreen = true;
+    }
+    if (!hasServerScreen && !serverConfig().serverName().isEmpty()) {
+        int answer = QMessageBox::warning(
+            this, tr("This computer is missing"),
+            tr("None of the screens is named %1, the name of this computer, so the server "
+               "will not start with this configuration. Save it anyway?")
+                .arg(serverConfig().serverName()),
+            QMessageBox::Save | QMessageBox::Cancel);
+        if (answer != QMessageBox::Save)
+            return;
+    }
+
     serverConfig().haveHeartbeat(ui_->m_pCheckBoxHeartbeat->isChecked());
     serverConfig().setHeartbeat(ui_->m_pSpinBoxHeartbeat->value());
 
@@ -108,6 +178,300 @@ void ServerConfigDialog::accept()
     setOrigServerConfig(serverConfig());
 
     QDialog::accept();
+}
+
+int ServerConfigDialog::selectedLinkRow() const
+{
+    QModelIndexList rows = ui_->m_pTableLinks->selectionModel()->selectedRows();
+    return rows.isEmpty() ? -1 : rows.first().row();
+}
+
+QString ServerConfigDialog::selectedScreenName() const
+{
+    return ui_->m_pLayoutView->selectedScreen();
+}
+
+QStringList ServerConfigDialog::screenNames() const
+{
+    QStringList names;
+    for (const Screen& screen : m_ServerConfig.screens())
+        names.append(screen.name());
+    return names;
+}
+
+void ServerConfigDialog::refreshScreens(const QString& select)
+{
+    ui_->m_pLayoutView->refresh();
+    if (!select.isEmpty()) {
+        ui_->m_pTableLinks->clearSelection();
+        ui_->m_pLayoutView->selectScreen(select);
+    }
+    updateScreenButtons();
+}
+
+void ServerConfigDialog::updateLinkRows()
+{
+    const auto& links = serverConfig().links();
+    ui_->m_pTableLinks->setRowCount(static_cast<int>(links.size()));
+    for (int row = 0; row < static_cast<int>(links.size()); row++) {
+        const ScreenLink& link = links[row];
+        const QString cells[] = {
+            link.source, ScreenLink::sideLabel(link.side), stretchLabel(link.sourceStart, link.sourceEnd),
+            link.target, stretchLabel(link.targetStart, link.targetEnd),
+        };
+        for (int column = 0; column < 5; column++) {
+            QTableWidgetItem* item = ui_->m_pTableLinks->item(row, column);
+            if (item)
+                item->setText(cells[column]);
+            else
+                ui_->m_pTableLinks->setItem(row, column, new QTableWidgetItem(cells[column]));
+        }
+    }
+}
+
+void ServerConfigDialog::refreshLinks(int select)
+{
+    updateLinkRows();
+    ui_->m_pLayoutView->refresh();
+    ui_->m_pTableLinks->clearSelection();
+    if (select >= 0 && select < static_cast<int>(serverConfig().links().size()))
+        ui_->m_pTableLinks->selectRow(select);
+    on_m_pTableLinks_itemSelectionChanged();
+}
+
+void ServerConfigDialog::updateScreenButtons()
+{
+    bool selected = !selectedScreenName().isEmpty();
+    ui_->m_pButtonEditScreen->setEnabled(selected);
+    ui_->m_pButtonRemoveScreen->setEnabled(selected);
+}
+
+bool ServerConfigDialog::checkScreenName(const QString& name, const QString& currentName)
+{
+    if (!ServerConfig::isValidScreenName(name)) {
+        QMessageBox::warning(this, tr("Invalid screen name"),
+                             tr("\"%1\" is not a valid screen name. Use letters, digits, "
+                                "hyphens and underscores, optionally in dot-separated parts "
+                                "like a host name.").arg(name));
+        return false;
+    }
+    for (const Screen& screen : serverConfig().screens()) {
+        if (screen.name() == currentName)
+            continue;
+        bool taken = screen.name().compare(name, Qt::CaseInsensitive) == 0 ||
+                     screen.aliases().contains(name, Qt::CaseInsensitive);
+        if (taken) {
+            QMessageBox::warning(this, tr("Screen name taken"),
+                                 tr("There already is a screen called %1.").arg(name));
+            return false;
+        }
+    }
+    return true;
+}
+
+void ServerConfigDialog::on_m_pButtonAddScreen_clicked()
+{
+    bool ok = false;
+    QString name = QInputDialog::getText(this, tr("Add screen"),
+                                         tr("Screen name (the name the client uses):"),
+                                         QLineEdit::Normal, QString(), &ok).trimmed();
+    if (!ok || name.isEmpty() || !checkScreenName(name, QString()))
+        return;
+
+    serverConfig().screens().push_back(Screen(name));
+    refreshScreens(name);
+}
+
+void ServerConfigDialog::on_m_pButtonEditScreen_clicked()
+{
+    QString oldName = selectedScreenName();
+    if (oldName.isEmpty())
+        return;
+
+    auto& screens = serverConfig().screens();
+    auto it = std::find_if(screens.begin(), screens.end(),
+                           [&](const Screen& screen) { return screen.name() == oldName; });
+    if (it == screens.end())
+        return;
+
+    Screen edited = *it;
+    ScreenSettingsDialog dlg(this, &edited);
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+
+    QString newName = edited.name();
+    if (newName != oldName && !checkScreenName(newName, oldName))
+        return;
+
+    serverConfig().renameScreen(oldName, newName);
+    for (Screen& screen : screens) {
+        if (screen.name() == newName)
+            screen = edited;
+    }
+    refreshScreens(newName);
+    refreshLinks();
+}
+
+void ServerConfigDialog::on_m_pButtonRemoveScreen_clicked()
+{
+    QString name = selectedScreenName();
+    if (name.isEmpty())
+        return;
+
+    if (name.compare(serverConfig().serverName(), Qt::CaseInsensitive) == 0) {
+        QMessageBox::information(this, tr("Remove screen"),
+                                 tr("%1 is this computer; the server needs it in its "
+                                    "configuration.").arg(name));
+        return;
+    }
+
+    int linkCount = 0;
+    for (const ScreenLink& link : serverConfig().links()) {
+        if (link.source == name || link.target == name)
+            linkCount++;
+    }
+    QString question = linkCount == 0
+        ? tr("Remove %1?").arg(name)
+        : tr("Remove %1 and the %n link(s) to and from it?", nullptr, linkCount).arg(name);
+    if (QMessageBox::question(this, tr("Remove screen"), question) != QMessageBox::Yes)
+        return;
+
+    serverConfig().removeScreen(name);
+    refreshScreens();
+    refreshLinks();
+}
+
+int ServerConfigDialog::findLink(const QString& source, ScreenLink::Side side,
+                                 double start, double end) const
+{
+    const auto& links = m_ServerConfig.links();
+    for (int i = 0; i < static_cast<int>(links.size()); i++) {
+        const ScreenLink& link = links[i];
+        if (link.source == source && link.side == side &&
+            link.sourceStart == start && link.sourceEnd == end)
+            return i;
+    }
+    return -1;
+}
+
+bool ServerConfigDialog::storeLink(const ScreenLink& link, int index)
+{
+    auto& links = serverConfig().links();
+    for (int i = 0; i < static_cast<int>(links.size()); i++) {
+        const ScreenLink& other = links[i];
+        if (i == index || other.source != link.source || other.side != link.side)
+            continue;
+        if (link.sourceStart < other.sourceEnd && other.sourceStart < link.sourceEnd) {
+            QMessageBox::warning(
+                this, tr("Links overlap"),
+                tr("The %1 edge of %2 already leads to %3 along %4. A stretch of an edge can "
+                   "lead to only one place; shorten one of the two links.")
+                    .arg(ScreenLink::sideLabel(link.side), link.source, other.target,
+                         stretchLabel(other.sourceStart, other.sourceEnd)));
+            return false;
+        }
+    }
+
+    if (index < 0)
+        links.push_back(link);
+    else
+        links[index] = link;
+    return true;
+}
+
+void ServerConfigDialog::on_m_pTableLinks_itemSelectionChanged()
+{
+    int row = selectedLinkRow();
+    ui_->m_pButtonEditLink->setEnabled(row >= 0);
+    ui_->m_pButtonRemoveLink->setEnabled(row >= 0);
+    if (row >= 0 || ui_->m_pLayoutView->selectedLink() >= 0)
+        ui_->m_pLayoutView->selectLink(row);
+    updateScreenButtons();
+}
+
+void ServerConfigDialog::on_m_pTableLinks_cellDoubleClicked()
+{
+    on_m_pButtonEditLink_clicked();
+}
+
+void ServerConfigDialog::on_m_pButtonAddLink_clicked()
+{
+    QStringList names = screenNames();
+    if (names.size() < 1)
+        return;
+
+    ScreenLink link;
+    link.source = selectedScreenName().isEmpty() ? names.first() : selectedScreenName();
+    link.target = names.first();
+    for (const QString& name : names) {
+        if (name != link.source) {
+            link.target = name;
+            break;
+        }
+    }
+
+    LinkDialog dlg(this, names, link, true, false);
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+
+    link = dlg.link();
+    if (!storeLink(link, -1))
+        return;
+    if (dlg.includeLinkBack())
+        storeLink(link.reversed(), -1);
+    refreshLinks(static_cast<int>(serverConfig().links().size()) - 1);
+}
+
+void ServerConfigDialog::on_m_pButtonEditLink_clicked()
+{
+    int row = selectedLinkRow();
+    if (row < 0 || row >= static_cast<int>(serverConfig().links().size()))
+        return;
+
+    ScreenLink old = serverConfig().links()[row];
+    ScreenLink oldBack = old.reversed();
+    int backIndex = findLink(oldBack.source, oldBack.side, oldBack.sourceStart, oldBack.sourceEnd);
+    if (backIndex >= 0 && serverConfig().links()[backIndex] != oldBack)
+        backIndex = -1;
+
+    LinkDialog dlg(this, screenNames(), old, false, backIndex >= 0);
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+
+    ScreenLink link = dlg.link();
+    if (!storeLink(link, row))
+        return;
+    if (dlg.includeLinkBack())
+        storeLink(link.reversed(), backIndex);
+    refreshLinks(row);
+}
+
+void ServerConfigDialog::on_m_pButtonRemoveLink_clicked()
+{
+    int row = selectedLinkRow();
+    auto& links = serverConfig().links();
+    if (row < 0 || row >= static_cast<int>(links.size()))
+        return;
+
+    ScreenLink back = links[row].reversed();
+    auto backIt = std::find(links.begin(), links.end(), back);
+    bool removeBack = false;
+    if (backIt != links.end() && backIt - links.begin() != row) {
+        int answer = QMessageBox::question(
+            this, tr("Remove link"),
+            tr("Also remove the way back, from the %1 edge of %2 to %3?")
+                .arg(ScreenLink::sideLabel(back.side), back.source, back.target),
+            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+        if (answer == QMessageBox::Cancel)
+            return;
+        removeBack = answer == QMessageBox::Yes;
+    }
+
+    ScreenLink removed = links[row];
+    links.erase(links.begin() + row);
+    if (removeBack)
+        links.erase(std::find(links.begin(), links.end(), removed.reversed()));
+    refreshLinks(std::min(row, static_cast<int>(links.size()) - 1));
 }
 
 void ServerConfigDialog::on_m_pButtonNewHotkey_clicked()

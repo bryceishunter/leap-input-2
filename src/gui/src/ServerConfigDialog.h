@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include "ScreenSetupModel.h"
 #include "ServerConfig.h"
 
 #include <QDialog>
@@ -53,15 +52,38 @@ class ServerConfigDialog : public QDialog
         void on_m_pButtonRemoveAction_clicked();
         void on_m_pCheckBoxEnableClipboard_stateChanged(int state);
 
+        void on_m_pButtonAddScreen_clicked();
+        void on_m_pButtonEditScreen_clicked();
+        void on_m_pButtonRemoveScreen_clicked();
+
+        void on_m_pButtonAddLink_clicked();
+        void on_m_pButtonEditLink_clicked();
+        void on_m_pButtonRemoveLink_clicked();
+        void on_m_pTableLinks_itemSelectionChanged();
+        void on_m_pTableLinks_cellDoubleClicked();
+
     protected:
         ServerConfig& serverConfig() { return m_ServerConfig; }
         void setOrigServerConfig(const ServerConfig& s) { m_OrigServerConfig = s; }
-        ScreenSetupModel& model() { return m_ScreenSetupModel; }
+        void showEvent(QShowEvent* event) override;
+
+    private:
+        void refreshScreens(const QString& select = QString());
+        void refreshLinks(int select = -1);
+        void updateLinkRows();
+        void updateScreenButtons();
+        QStringList screenNames() const;
+        int selectedLinkRow() const;
+        QString selectedScreenName() const;
+        // puts link into the list, replacing the entry at index unless it is -1;
+        // returns false, after telling the user, when it overlaps another link
+        bool storeLink(const ScreenLink& link, int index);
+        int findLink(const QString& source, ScreenLink::Side side, double start, double end) const;
+        bool checkScreenName(const QString& name, const QString& currentName);
 
     private:
         std::unique_ptr<Ui::ServerConfigDialog> ui_;
         ServerConfig& m_OrigServerConfig;
         ServerConfig m_ServerConfig;
-        ScreenSetupModel m_ScreenSetupModel;
         QString m_Message;
 };

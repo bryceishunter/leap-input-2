@@ -156,3 +156,106 @@ QTextStream& operator<<(QTextStream& outStream, const Action& action)
 
     return outStream;
 }
+
+static int indexOfName(const char* const names[], int count, const QString& name)
+{
+    for (int i = 0; i < count; i++) {
+        if (name == QLatin1String(names[i]))
+            return i;
+    }
+    return -1;
+}
+
+bool Action::fromText(const QString& text, bool activeOnRelease, Action& action)
+{
+    QString name = text.trimmed();
+    QString args;
+    bool hasArgs = false;
+    int open = name.indexOf(QLatin1Char('('));
+    if (open >= 0) {
+        if (!name.endsWith(QLatin1Char(')')))
+            return false;
+        args = name.mid(open + 1, name.size() - open - 2).trimmed();
+        name = name.left(open).trimmed();
+        hasArgs = true;
+    }
+
+    int type = indexOfName(action_type_names_, mousebutton + 1, name);
+    if (type < 0)
+        return false;
+
+    Action result;
+    result.setActiveOnRelease(activeOnRelease);
+
+    switch (type) {
+        case keyDown:
+        case keyUp:
+        case keystroke: {
+            QStringList parts = args.split(QLatin1Char(','));
+            if (parts.size() > 2)
+                return false;
+            KeySequence sequence;
+            if (!KeySequence::fromString(parts[0].trimmed(), false, sequence))
+                return false;
+            result.setType(type);
+            result.setKeySequence(sequence);
+            if (parts.size() == 2 && parts[1].trimmed() != QLatin1String("*")) {
+                result.setHaveScreens(true);
+                for (const QString& screen : parts[1].split(QLatin1Char(':'))) {
+                    if (screen.trimmed().isEmpty())
+                        return false;
+                    result.appendTypeScreenName(screen.trimmed());
+                }
+            }
+            break;
+        }
+
+        case mouseDown:
+        case mouseUp:
+        case mousebutton: {
+            KeySequence sequence;
+            if (!KeySequence::fromString(args, true, sequence))
+                return false;
+            result.setType(type - mouseDown);
+            result.setKeySequence(sequence);
+            break;
+        }
+
+        case switchToScreen:
+            if (args.isEmpty())
+                return false;
+            result.setType(type);
+            result.setSwitchScreenName(args);
+            break;
+
+        case toggleScreen:
+            if (hasArgs)
+                return false;
+            result.setType(type);
+            break;
+
+        case switchInDirection: {
+            int direction = indexOfName(switch_direction_names_, switchDown + 1, args);
+            if (direction < 0)
+                return false;
+            result.setType(type);
+            result.setSwitchDirection(direction);
+            break;
+        }
+
+        case lockCursorToScreen: {
+            int mode = indexOfName(lock_cursor_mode_names_, lockCursorOff + 1, args);
+            if (mode < 0)
+                return false;
+            result.setType(type);
+            result.setLockCursorMode(mode);
+            break;
+        }
+
+        default:
+            return false;
+    }
+
+    action = result;
+    return true;
+}

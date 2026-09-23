@@ -19,32 +19,38 @@
 #pragma once
 
 #include <QList>
+#include <QStringList>
+
+#include <memory>
+#include <vector>
 
 #include "Screen.h"
 #include "BaseConfig.h"
 #include "Hotkey.h"
+#include "ScreenLink.h"
 
-class QTextStream;
 class QSettings;
 class QString;
-class QFile;
 class ServerConfigDialog;
 class MainWindow;
 
+namespace inputleap { class Config; }
+
+// The server configuration being edited. Its source of truth is a
+// configuration file: load() reads everything from it, and save() writes back
+// only what was changed here, merged into the file as loaded. Whatever this
+// class does not model (comments aside) therefore survives a save untouched.
 class ServerConfig : public BaseConfig
 {
     friend class ServerConfigDialog;
-    friend QTextStream& operator<<(QTextStream& outStream, const ServerConfig& config);
 
     public:
-        ServerConfig(QSettings* settings, int numColumns, int numRows,
-            QString serverName, MainWindow* mainWindow);
+        ServerConfig(QSettings* settings, QString serverName, MainWindow* mainWindow);
         ~ServerConfig();
 
     public:
         const std::vector<Screen>& screens() const { return m_Screens; }
-        int numColumns() const { return m_NumColumns; }
-        int numRows() const { return m_NumRows; }
+        const std::vector<ScreenLink>& links() const { return m_Links; }
         bool hasHeartbeat() const { return m_HasHeartbeat; }
         int heartbeat() const { return m_Heartbeat; }
         bool relativeMouseMoves() const { return m_RelativeMouseMoves; }
@@ -58,26 +64,48 @@ class ServerConfig : public BaseConfig
         int switchCornerSize() const { return m_SwitchCornerSize; }
         const QList<bool>& switchCorners() const { return m_SwitchCorners; }
         const std::vector<Hotkey>& hotkeys() const { return m_Hotkeys; }
+        // hotkey rules from the file that the hotkey editor can't represent;
+        // they are kept as they are and shown read-only
+        const QStringList& preservedRules() const { return m_PreservedRules; }
         bool ignoreAutoConfigClient() const { return m_IgnoreAutoConfigClient; }
         bool enableDragAndDrop() const { return m_EnableDragAndDrop; }
         bool clipboardSharing() const { return m_ClipboardSharing; }
         size_t clipboardSharingSize() const { return m_ClipboardSharingSize; }
         static size_t defaultClipboardSharingSize();
+        static bool isValidScreenName(const QString& name);
+
+        // Replaces this configuration with the contents of fileName. On failure
+        // nothing changes and error says why, with the line number for syntax errors.
+        bool load(const QString& fileName, QString* error);
+
+        // Writes the configuration to fileName, keeping everything this class
+        // does not edit as it was loaded, and makes that the new baseline.
+        bool save(const QString& fileName, QString* error);
+
+        // Like save() but leaves the baseline alone, for "save as" copies.
+        bool exportTo(const QString& fileName, QString* error) const;
+
+        // Whether fileName no longer holds what was last loaded or saved,
+        // i.e. it was edited by hand in the meantime.
+        bool changedOnDisk(const QString& fileName) const;
+
+        // Resets to a new configuration holding just the server screen.
+        void reset();
+
+        // Imports the grid layout older versions kept in the settings instead
+        // of in a file; returns false when there is none.
+        bool loadLegacySettings();
 
         void saveSettings();
-        void loadSettings();
-        bool save(const QString& fileName) const;
-        void save(QFile& file) const;
         int numScreens() const;
         int autoAddScreen(const QString name);
+        const QString& serverName() const { return m_ServerName; }
+        void setServerName(const QString& name) { m_ServerName = name; }
 
     protected:
         QSettings& settings() { return *m_pSettings; }
         std::vector<Screen>& screens() { return m_Screens; }
-        void setScreens(const std::vector<Screen>& screens) { m_Screens = screens; }
-        void addScreen(const Screen& screen) { m_Screens.push_back(screen); }
-        void setNumColumns(int n) { m_NumColumns = n; }
-        void setNumRows(int n) { m_NumRows = n; }
+        std::vector<ScreenLink>& links() { return m_Links; }
         void haveHeartbeat(bool on) { m_HasHeartbeat = on; }
         void setHeartbeat(int val) { m_Heartbeat = val; }
         void setRelativeMouseMoves(bool on) { m_RelativeMouseMoves = on; }
@@ -96,20 +124,24 @@ class ServerConfig : public BaseConfig
         QList<bool>& switchCorners() { return m_SwitchCorners; }
         std::vector<Hotkey>& hotkeys() { return m_Hotkeys; }
 
-        void init();
-        int adjacentScreenIndex(int idx, int deltaColumn, int deltaRow) const;
+        // renames a screen and every link to or from it
+        void renameScreen(const QString& oldName, const QString& newName);
+        // removes a screen and every link to or from it
+        void removeScreen(const QString& name);
 
     private:
-        bool findScreenName(const QString& name, int& index);
-        bool fixNoServer(const QString& name, int& index);
+        void resetOptions();
+        void markLoaded();
+        QString optionsText() const;
+        QStringList hotkeyLines() const;
+        bool applyEdits(inputleap::Config& config, QString* error) const;
+        bool formatFile(QString& text, QString* error) const;
         int showAddClientDialog(const QString& clientName);
-        void addToFirstEmptyGrid(const QString& clientName);
 
     private:
         QSettings* m_pSettings;
         std::vector<Screen> m_Screens;
-        int m_NumColumns;
-        int m_NumRows;
+        std::vector<ScreenLink> m_Links;
         bool m_HasHeartbeat;
         int m_Heartbeat;
         bool m_RelativeMouseMoves;
@@ -122,15 +154,25 @@ class ServerConfig : public BaseConfig
         int m_SwitchCornerSize;
         QList<bool> m_SwitchCorners;
         std::vector<Hotkey> m_Hotkeys;
+        QStringList m_PreservedRules;
         QString m_ServerName;
         bool m_IgnoreAutoConfigClient;
         bool m_EnableDragAndDrop;
         bool m_ClipboardSharing;
         size_t m_ClipboardSharingSize;
         MainWindow* m_pMainWindow;
-};
 
-QTextStream& operator<<(QTextStream& outStream, const ServerConfig& config);
+        // the file as last loaded or saved, which save() merges edits into
+        std::shared_ptr<const inputleap::Config> m_Baseline;
+        QString m_BaselineText;
+        QString m_HeaderComment;
+
+        // the editable state as it was when loaded, to find what was edited
+        std::vector<Screen> m_LoadedScreens;
+        std::vector<ScreenLink> m_LoadedLinks;
+        QString m_LoadedOptions;
+        QStringList m_LoadedHotkeys;
+};
 
 enum {
     kAutoAddScreenOk,

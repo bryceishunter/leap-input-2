@@ -245,3 +245,77 @@ QString KeySequence::keyToString(int key)
     // give up, InputLeap probably won't handle this
     return "";
 }
+
+static int keyFromString(const QString& name)
+{
+    for (int i = 0; keyname[i].name; i++) {
+        if (name == QLatin1String(keyname[i].name))
+            return keyname[i].key;
+    }
+
+    if (name.size() == 1 && name[0].unicode() > 0x20 && name[0].unicode() < 0x80)
+        return name[0].toUpper().unicode();
+
+    if (name.size() > 1 && name[0] == QLatin1Char('F')) {
+        bool ok = false;
+        int number = name.mid(1).toInt(&ok);
+        if (ok && number >= 1 && number <= 35)
+            return Qt::Key_F1 + number - 1;
+    }
+
+    if (name.size() == 6 && name.startsWith(QLatin1String("\\u"))) {
+        bool ok = false;
+        int code = name.mid(2).toInt(&ok, 16);
+        if (ok && code >= 0x80)
+            return code;
+    }
+
+    return 0;
+}
+
+static int mouseButtonFromString(const QString& name)
+{
+    if (name == QLatin1String("1"))
+        return Qt::LeftButton;
+    if (name == QLatin1String("2"))
+        return Qt::RightButton;
+    if (name == QLatin1String("3"))
+        return Qt::MiddleButton;
+    if (name == QLatin1String("4"))
+        return Qt::BackButton;
+    return 0;
+}
+
+bool KeySequence::fromString(const QString& text, bool mouseButton, KeySequence& sequence)
+{
+    const QStringList parts = text.split(QLatin1Char('+'));
+    if (parts.isEmpty() || parts.size() > 4)
+        return false;
+
+    KeySequence result;
+    for (int i = 0; i < parts.size() - 1; i++) {
+        int modifier = 0;
+        if (parts[i] == QLatin1String("Shift"))
+            modifier = Qt::ShiftModifier;
+        else if (parts[i] == QLatin1String("Control"))
+            modifier = Qt::ControlModifier;
+        else if (parts[i] == QLatin1String("Alt"))
+            modifier = Qt::AltModifier;
+        else if (parts[i] == QLatin1String("Meta"))
+            modifier = Qt::MetaModifier;
+
+        if (modifier == 0 || (result.m_Modifiers & modifier))
+            return false;
+        result.m_Sequence.append(modifier);
+        result.m_Modifiers |= modifier;
+    }
+
+    int key = mouseButton ? mouseButtonFromString(parts.last()) : keyFromString(parts.last());
+    if (key == 0)
+        return false;
+    result.m_Sequence.append(key);
+    result.setValid(true);
+
+    sequence = result;
+    return true;
+}

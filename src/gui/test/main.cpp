@@ -14,10 +14,24 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "arch/Arch.h"
+#include "base/Log.h"
+#if SYSAPI_WIN32
+#include "arch/win32/ArchMiscWindows.h"
+#endif
+
 #include <gtest/gtest.h>
 
 int main(int argc, char **argv)
 {
+    // the configuration tests run the server's parser, as the settings window does
+#if SYSAPI_WIN32
+    inputleap::ArchMiscWindows::setInstanceWin32(GetModuleHandle(nullptr));
+#endif
+    inputleap::Arch arch;
+    arch.init();
+    inputleap::Log log;
+
     testing::InitGoogleTest(&argc, argv);
     return (RUN_ALL_TESTS() == 1) ? 1 : 0;
 }

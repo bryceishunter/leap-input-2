@@ -24,10 +24,18 @@
 #include "AppConfig.h"
 #include "SetupWizard.h"
 
+#include "arch/Arch.h"
+#include "base/Log.h"
+#if SYSAPI_WIN32
+#include "arch/win32/ArchMiscWindows.h"
+#endif
+
 #include <QtCore>
 #include <QtGui>
 #include <QSettings>
 #include <QMessageBox>
+
+#include <clocale>
 
 #if defined(Q_OS_MAC)
 #include <Carbon/Carbon.h>
@@ -87,6 +95,17 @@ int main(int argc, char* argv[])
     QCoreApplication::setApplicationName("Leapdesk");
 
     QInputLeapApplication app(argc, argv);
+
+    // The settings window reads and writes configuration files with the
+    // server's own parser, which needs the platform layer and a log set up,
+    // and numbers such as "42.86" written with a dot whatever the locale.
+#if SYSAPI_WIN32
+    inputleap::ArchMiscWindows::setInstanceWin32(GetModuleHandle(nullptr));
+#endif
+    inputleap::Arch arch;
+    arch.init();
+    inputleap::Log log;
+    setlocale(LC_NUMERIC, "C");
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     app.setDesktopFileName(QStringLiteral("io.github.input_leap.input-leap"));

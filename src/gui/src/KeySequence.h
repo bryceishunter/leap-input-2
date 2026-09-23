@@ -39,6 +39,10 @@ class KeySequence
         void loadSettings(QSettings& settings);
         const QList<int>& sequence() const { return m_Sequence; }
 
+        // parses what toString() writes, e.g. "Control+Alt+F1" or, for a
+        // mouse button, "Shift+2"; returns false for anything it can't represent
+        static bool fromString(const QString& text, bool mouseButton, KeySequence& sequence);
+
     private:
         void setValid(bool b) { m_IsValid = b; }
         void setModifiers(int i) { m_Modifiers = i; }

@@ -36,27 +36,20 @@ set(GUI_SOURCE_FILES
     src/Ipc.cpp
     src/IpcReader.cpp
     src/KeySequenceWidget.cpp
+    src/LinkDialog.cpp
     src/LogWindow.cpp
     src/main.cpp
     src/MainWindow.cpp
-    src/NewScreenWidget.cpp
     src/QInputLeapApplication.cpp
     src/QUtility.cpp
     src/Screen.cpp
+    src/ScreenLayoutView.cpp
     src/ScreenSettingsDialog.cpp
-    src/ScreenSetupModel.cpp
-    src/ScreenSetupView.cpp
     src/ServerConfig.cpp
     src/ServerConfigDialog.cpp
     src/SettingsDialog.cpp
     src/SetupWizard.cpp
     src/SslCertificate.cpp
-    src/TrashScreenWidget.cpp
-    src/ZeroconfBrowser.cpp
-    src/ZeroconfRegister.cpp
-    src/ZeroconfServer.cpp
-    src/ZeroconfService.cpp
-    src/ZeroconfThread.cpp
 )
 
 set(GUI_HEADER_FILES
@@ -75,29 +68,47 @@ set(GUI_HEADER_FILES
     src/Ipc.h
     src/IpcReader.h
     src/KeySequenceWidget.h
+    src/LinkDialog.h
     src/LogWindow.h
     src/MainWindow.h
-    src/NewScreenWidget.h
     src/ProcessorArch.h
     src/QInputLeapApplication.h
     src/QUtility.h
     src/Screen.h
+    src/ScreenLayoutView.h
+    src/ScreenLink.h
     src/ScreenSettingsDialog.h
-    src/ScreenSetupModel.h
-    src/ScreenSetupView.h
     src/ServerConfigDialog.h
     src/ServerConfig.h
     src/SettingsDialog.h
     src/SetupWizard.h
     src/SslCertificate.h
-    src/TrashScreenWidget.h
+)
+
+set(GUI_ZEROCONF_FILES
+    src/ZeroconfBrowser.cpp
     src/ZeroconfBrowser.h
     src/ZeroconfRecord.h
+    src/ZeroconfRegister.cpp
     src/ZeroconfRegister.h
+    src/ZeroconfServer.cpp
     src/ZeroconfServer.h
+    src/ZeroconfService.cpp
     src/ZeroconfService.h
+    src/ZeroconfThread.cpp
     src/ZeroconfThread.h
 )
+
+# The Bonjour SDK sits behind an Apple developer login, so on Windows
+# build without auto config instead of failing when it is missing.
+if (INPUTLEAP_GUI_ZEROCONF AND BUILD_MSWINDOWS)
+    find_path (DNSSD_INCLUDE_DIR dns_sd.h HINTS ENV BONJOUR_SDK_HOME PATH_SUFFIXES Include)
+    find_library (DNSSD_LIB dnssd.lib HINTS ENV BONJOUR_SDK_HOME PATH_SUFFIXES "Lib/x64")
+    if (NOT DNSSD_INCLUDE_DIR OR NOT DNSSD_LIB)
+        message (STATUS "Bonjour SDK not found, building the GUI without Zeroconf auto config")
+        set (INPUTLEAP_GUI_ZEROCONF OFF)
+    endif()
+endif()
 
 set(GUI_UI_FILES
     src/AboutDialog.ui
@@ -188,9 +199,18 @@ add_executable (leapdesk WIN32
     res/Leapdesk.qrc
 )
 
+if (INPUTLEAP_GUI_ZEROCONF)
+    target_sources (leapdesk PRIVATE ${GUI_ZEROCONF_FILES})
+    target_compile_definitions (leapdesk PRIVATE INPUTLEAP_GUI_ZEROCONF)
+endif()
+
 include_directories (./src)
 
+# the settings window reads and writes configuration files with the server's own parser
 target_link_libraries(leapdesk
+    server
+    synlib
+    mt
     net
     arch
     base
@@ -206,19 +226,21 @@ target_compile_definitions (leapdesk PRIVATE -DINPUTLEAP_VERSION_STAGE="${INPUTL
 target_compile_definitions (leapdesk PRIVATE -DINPUTLEAP_REVISION="${INPUTLEAP_REVISION}")
 
 if (BUILD_MSWINDOWS)
-    include_directories ($ENV{BONJOUR_SDK_HOME}/Include)
-    find_library (DNSSD_LIB dnssd.lib
-                  HINTS ENV BONJOUR_SDK_HOME
-                  PATH_SUFFIXES "Lib/x64")
     set_target_properties (leapdesk PROPERTIES LINK_FLAGS "/NODEFAULTLIB:LIBCMT")
-    target_link_libraries (leapdesk ${DNSSD_LIB})
+    if (INPUTLEAP_GUI_ZEROCONF)
+        target_include_directories (leapdesk PRIVATE ${DNSSD_INCLUDE_DIR})
+        target_link_libraries (leapdesk ${DNSSD_LIB})
+    endif()
 endif()
 if (BUILD_CARBON)
     find_library(APPSERVICES_LIB ApplicationServices)
     target_link_libraries(leapdesk ${APPSERVICES_LIB})
 endif()
 if (BUILD_XWINDOWS OR BUILD_LIBEI)
-    target_link_libraries (leapdesk dns_sd Threads::Threads)
+    target_link_libraries (leapdesk Threads::Threads)
+    if (INPUTLEAP_GUI_ZEROCONF)
+        target_link_libraries (leapdesk dns_sd)
+    endif()
 endif()
 
 target_link_libraries (leapdesk common)
@@ -252,13 +274,30 @@ if(INPUTLEAP_BUILD_TESTS)
     set(GUI_TEST_SOURCE_FILES
         test/KeySequenceTests.cpp
         test/HotkeyTests.cpp
+        test/HotkeyParsingTests.cpp
+        test/ServerConfigTests.cpp
         test/main.cpp
+    )
+
+    # the configuration model and what it needs, to test reading and writing files
+    set(GUI_TEST_MODEL_FILES
+        src/AddClientDialog.cpp
+        src/AddClientDialog.h
+        src/AddClientDialog.ui
+        src/BaseConfig.cpp
+        src/BaseConfig.h
+        src/Screen.cpp
+        src/Screen.h
+        src/ScreenLink.h
+        src/ServerConfig.cpp
+        src/ServerConfig.h
     )
 
     add_executable(guiunittests
         ${GUI_TEST_SOURCE_FILES}
         ${GUI_COMMON_SOURCE_FILES}
         ${GUI_COMMON_HEADER_FILES}
+        ${GUI_TEST_MODEL_FILES}
     )
 
     add_test(NAME guiunittests
@@ -267,4 +306,5 @@ if(INPUTLEAP_BUILD_TESTS)
 
     target_include_directories(guiunittests PUBLIC ../../ext)
     target_link_libraries(guiunittests gtest gmock Qt${QT_DEFAULT_MAJOR_VERSION}::Core Qt${QT_DEFAULT_MAJOR_VERSION}::Widgets Qt${QT_DEFAULT_MAJOR_VERSION}::Network ${libs})
+    target_link_libraries(guiunittests server synlib mt net arch base io common OpenSSL::SSL OpenSSL::Crypto)
 endif()

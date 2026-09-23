@@ -24,7 +24,9 @@
 #include "AboutDialog.h"
 #include "ServerConfigDialog.h"
 #include "SettingsDialog.h"
+#ifdef INPUTLEAP_GUI_ZEROCONF
 #include "ZeroconfService.h"
+#endif
 #include "DataDownloader.h"
 #include "CommandProcess.h"
 #include "FingerprintAcceptDialog.h"
@@ -62,14 +64,14 @@ namespace {
 
 static const QString allFilesFilter(QObject::tr("All files (*.*)"));
 #if defined(Q_OS_WIN)
-static const char APP_CONFIG_NAME[] = "input-leap.sgc";
+static const char APP_CONFIG_NAME[] = "leapdesk.sgc";
 static const QString APP_CONFIG_FILTER(QObject::tr("Leapdesk KVM Configurations (*.sgc)"));
 static QString bonjourBaseUrl = "http://binaries.symless.com/bonjour/";
 static const char bonjourFilename32[] = "Bonjour.msi";
 static const char bonjourFilename64[] = "Bonjour64.msi";
 static const char bonjourTargetFilename[] = "Bonjour.msi";
 #else
-static const char APP_CONFIG_NAME[] = "input-leap.conf";
+static const char APP_CONFIG_NAME[] = "leapdesk.conf";
 static const QString APP_CONFIG_FILTER(QObject::tr("Leapdesk KVM Configurations (*.conf)"));
 #endif
 static const QString APP_CONFIG_OPEN_FILTER(APP_CONFIG_FILTER + ";;" + allFilesFilter);
@@ -116,8 +118,7 @@ MainWindow::MainWindow(QSettings& settings, AppConfig& appConfig) :
     m_Settings(settings),
     m_AppConfig(&appConfig),
     cmd_app_process_(nullptr),
-    m_ServerConfig(&m_Settings, 5, 3, m_AppConfig->screenName(), this),
-    m_pTempConfigFile(nullptr),
+    m_ServerConfig(&m_Settings, m_AppConfig->screenName(), this),
     m_pTrayIcon(nullptr),
     m_pTrayIconMenu(nullptr),
     m_AlreadyHidden(false),
@@ -168,9 +169,15 @@ MainWindow::MainWindow(QSettings& settings, AppConfig& appConfig) :
     setMinimumSize(700, 0);
 #endif
 
+#ifdef INPUTLEAP_GUI_ZEROCONF
     m_SuppressAutoConfigWarning = true;
     ui_->m_pCheckBoxAutoConfig->setChecked(appConfig.autoConfig());
     m_SuppressAutoConfigWarning = false;
+#else
+    // built without Zeroconf: a stale saved setting must not disable the hostname field
+    appConfig.setAutoConfig(false);
+    ui_->m_pCheckBoxAutoConfig->hide();
+#endif
 
     ui_->m_pComboServerList->hide();
     ui_->m_pLabelPadlock->hide();
@@ -206,7 +213,9 @@ MainWindow::~MainWindow()
 
     saveSettings();
 
+#ifdef INPUTLEAP_GUI_ZEROCONF
     delete m_pZeroconfService;
+#endif
     delete m_DownloadMessageBox;
     delete m_BonjourInstall;
     delete m_pSslCertificate;
@@ -229,9 +238,11 @@ void MainWindow::open()
         showNormal();
     }
 
+#ifdef INPUTLEAP_GUI_ZEROCONF
     if (!appConfig().autoConfigPrompted()) {
         promptAutoConfig();
     }
+#endif
 
     // only start if user has previously started. this stops the gui from
     // auto hiding before the user has configured Leapdesk KVM (which of course
@@ -324,14 +335,49 @@ void MainWindow::loadSettings()
 {
     // the next two must come BEFORE loading groupServerChecked and groupClientChecked or
     // disabling and/or enabling the right widgets won't automatically work
-    ui_->m_pRadioExternalConfig->setChecked(settings().value("useExternalConfig", false).toBool());
-    ui_->m_pRadioInternalConfig->setChecked(settings().value("useInternalConfig", true).toBool());
-
     ui_->m_pGroupServer->setChecked(settings().value("groupServerChecked", false).toBool());
     ui_->m_pLineEditConfigFile->setText(settings().value("configFile",
                                                     QDir::homePath() + "/" + APP_CONFIG_NAME).toString());
     ui_->m_pGroupClient->setChecked(settings().value("groupClientChecked", true).toBool());
     ui_->m_pLineEditHostname->setText(settings().value("serverHostname").toString());
+
+    loadServerConfig();
+}
+
+void MainWindow::loadServerConfig()
+{
+    QString fileName = ui_->m_pLineEditConfigFile->text();
+    m_ServerConfigError.clear();
+
+    if (QFile::exists(fileName)) {
+        if (!m_ServerConfig.load(fileName, &m_ServerConfigError))
+            appendLogError(tr("server configuration %1 has an error, %2")
+                               .arg(fileName, m_ServerConfigError));
+        return;
+    }
+
+    // older versions kept the layout in the settings; move it into the file
+    if (m_ServerConfig.loadLegacySettings()) {
+        if (saveServerConfig())
+            appendLogInfo(tr("moved the server configuration into %1").arg(fileName));
+        return;
+    }
+
+    m_ServerConfig.reset();
+}
+
+bool MainWindow::saveServerConfig()
+{
+    QString fileName = ui_->m_pLineEditConfigFile->text();
+    QString error;
+    if (!m_ServerConfig.save(fileName, &error)) {
+        QMessageBox::warning(this, tr("Could not save the configuration"),
+                             tr("The server configuration could not be written to %1:\n\n%2")
+                                 .arg(fileName, error));
+        return false;
+    }
+    m_ServerConfigError.clear();
+    return true;
 }
 
 void MainWindow::initConnections()
@@ -350,9 +396,7 @@ void MainWindow::saveSettings()
 {
     // program settings
     settings().setValue("groupServerChecked", ui_->m_pGroupServer->isChecked());
-    settings().setValue("useExternalConfig", ui_->m_pRadioExternalConfig->isChecked());
     settings().setValue("configFile", ui_->m_pLineEditConfigFile->text());
-    settings().setValue("useInternalConfig", ui_->m_pRadioInternalConfig->isChecked());
     settings().setValue("groupClientChecked", ui_->m_pGroupClient->isChecked());
     settings().setValue("serverHostname", ui_->m_pLineEditHostname->text());
 
@@ -723,37 +767,11 @@ bool MainWindow::clientArgs(QStringList& args, QString& app)
 
 QString MainWindow::configFilename()
 {
-    QString filename;
-    if (ui_->m_pRadioInternalConfig->isChecked())
-    {
-        // TODO: no need to use a temporary file, since we need it to
-        // be permanent (since it'll be used for Windows services, etc).
-        m_pTempConfigFile = new QTemporaryFile();
-        if (!m_pTempConfigFile->open())
-        {
-            QMessageBox::critical(this, tr("Cannot write configuration file"),
-                                  tr("The temporary configuration file required to start Leapdesk KVM can not be written."));
-            return "";
-        }
-
-        serverConfig().save(*m_pTempConfigFile);
-        filename = m_pTempConfigFile->fileName();
-
-        m_pTempConfigFile->close();
-    }
-    else
-    {
-        if (!QFile::exists(ui_->m_pLineEditConfigFile->text()))
-        {
-            if (QMessageBox::warning(this, tr("Configuration filename invalid"),
-                tr("You have not filled in a valid configuration file for the Leapdesk KVM server. "
-                        "Do you want to browse for the configuration file now?"), QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes
-                    || !on_m_pButtonBrowseConfigFile_clicked())
-                return "";
-        }
-
-        filename = ui_->m_pLineEditConfigFile->text();
-    }
+    // the server reads the same file the settings window edits; a new
+    // configuration gets written out the first time the server needs it
+    QString filename = ui_->m_pLineEditConfigFile->text();
+    if (!QFile::exists(filename) && !saveServerConfig())
+        return "";
     return filename;
 }
 
@@ -833,13 +851,6 @@ void MainWindow::stop_cmd_app()
     }
 
     set_connection_state(AppConnectionState::DISCONNECTED);
-
-    // HACK: deleting the object deletes the physical file, which is
-    // bad, since it could be in use by the Windows service!
-#if !defined(Q_OS_WIN)
-    delete m_pTempConfigFile;
-#endif
-    m_pTempConfigFile = nullptr;
 
     // reset so that new connects cause auto-hide.
     m_AlreadyHidden = false;
@@ -1055,6 +1066,7 @@ bool MainWindow::event(QEvent* event)
 
 void MainWindow::updateZeroconfService()
 {
+#ifdef INPUTLEAP_GUI_ZEROCONF
     QMutexLocker locker(&m_UpdateZeroconfMutex);
 
     if (isBonjourRunning()) {
@@ -1069,6 +1081,7 @@ void MainWindow::updateZeroconfService()
             }
         }
     }
+#endif
 }
 
 void MainWindow::serverDetected(const QString name)
@@ -1151,24 +1164,46 @@ void MainWindow::on_m_pGroupServer_toggled(bool on)
 
 bool MainWindow::on_m_pButtonBrowseConfigFile_clicked()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Browse for a Leapdesk KVM config file"), QString(), APP_CONFIG_OPEN_FILTER);
+    // pick an existing file to edit, or name a new one to start from the current configuration
+    QString fileName = QFileDialog::getSaveFileName(
+        this, tr("Choose the server configuration file"), ui_->m_pLineEditConfigFile->text(),
+        APP_CONFIG_OPEN_FILTER, nullptr, QFileDialog::DontConfirmOverwrite);
+    if (fileName.isEmpty())
+        return false;
 
-    if (!fileName.isEmpty())
-    {
-        ui_->m_pLineEditConfigFile->setText(fileName);
-        return true;
+    QString error;
+    if (QFile::exists(fileName)) {
+        if (!m_ServerConfig.load(fileName, &error)) {
+            QMessageBox::warning(this, tr("Configuration file has an error"),
+                                 tr("%1 could not be read: %2\n\nFix it in a text editor, "
+                                    "or choose another file.").arg(fileName, error));
+            return false;
+        }
+    } else if (!m_ServerConfig.exportTo(fileName, &error) || !m_ServerConfig.load(fileName, &error)) {
+        QMessageBox::warning(this, tr("Could not create the configuration"),
+                             tr("%1 could not be written: %2").arg(fileName, error));
+        return false;
     }
 
-    return false;
+    bool changed = fileName != ui_->m_pLineEditConfigFile->text();
+    ui_->m_pLineEditConfigFile->setText(fileName);
+    m_ServerConfigError.clear();
+
+    // a running server follows the file it was started with, so point it at the new one
+    if (changed && m_ExpectedRunningState == kStarted && app_role() == AppRole::Server)
+        restart_cmd_app();
+    return true;
 }
 
 bool MainWindow::on_m_pActionSave_triggered()
 {
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save configuration as..."), QString(), APP_CONFIG_SAVE_FILTER);
 
-    if (!fileName.isEmpty() && !serverConfig().save(fileName))
+    QString error;
+    if (!fileName.isEmpty() && !serverConfig().exportTo(fileName, &error))
     {
-        QMessageBox::warning(this, tr("Save failed"), tr("Could not save configuration to file."));
+        QMessageBox::warning(this, tr("Save failed"),
+                             tr("Could not save configuration to file: %1").arg(error));
         return true;
     }
 
@@ -1197,21 +1232,21 @@ void MainWindow::autoAddScreen(const QString name)
             switch (r) {
             case kAutoAddScreenManualServer:
                 showConfigureServer(
-                    tr("Please add the server (%1) to the grid.")
+                    tr("Please add the server (%1) to the screens.")
                         .arg(appConfig().screenName()));
                 break;
 
             case kAutoAddScreenManualClient:
                 showConfigureServer(
-                    tr("Please drag the new client screen (%1) "
-                        "to the desired position on the grid.")
+                    tr("The new client screen (%1) was added; link it to the other "
+                        "screens to reach it.")
                         .arg(name));
                 break;
             default:
                 break;
             }
         }
-        else {
+        else if (saveServerConfig()) {
             restart_cmd_app();
         }
     }
@@ -1219,9 +1254,22 @@ void MainWindow::autoAddScreen(const QString name)
 
 void MainWindow::showConfigureServer(const QString& message)
 {
+    // the file may have been edited by hand since; that version is the one to edit
+    QString fileName = ui_->m_pLineEditConfigFile->text();
+    if (QFile::exists(fileName) && serverConfig().changedOnDisk(fileName)) {
+        if (!serverConfig().load(fileName, &m_ServerConfigError)) {
+            QMessageBox::warning(this, tr("Configuration file has an error"),
+                                 tr("%1 could not be read: %2\n\nFix it in a text editor, "
+                                    "or choose another file.").arg(fileName, m_ServerConfigError));
+            return;
+        }
+        m_ServerConfigError.clear();
+    }
+
     ServerConfigDialog dlg(this, serverConfig(), appConfig().screenName());
     dlg.message(message);
-    dlg.exec();
+    if (dlg.exec() == QDialog::Accepted && saveServerConfig() && m_ExpectedRunningState == kStarted)
+        appendLogInfo(tr("saved %1; the running server applies it within a few seconds").arg(fileName));
 }
 
 void MainWindow::on_m_pButtonConfigureServer_clicked()

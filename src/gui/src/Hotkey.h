@@ -37,6 +37,11 @@ class Hotkey
         Hotkey();
 
         QString text() const;
+
+        // parses one hotkey line of the options section, e.g.
+        // "keystroke(Control+F1) = switchToScreen(desk); lockCursorToScreen(off)";
+        // returns false for anything this class can't represent
+        static bool fromText(const QString& text, Hotkey& hotkey);
         const KeySequence& keySequence() const { return m_KeySequence; }
         void setKeySequence(const KeySequence& seq) { m_KeySequence = seq; }
 

@@ -85,3 +85,67 @@ QTextStream& operator<<(QTextStream& outStream, const Hotkey& hotkey)
 
     return outStream;
 }
+
+// splits at separators that are not inside parentheses
+static QStringList splitTopLevel(const QString& text, QChar separator)
+{
+    QStringList parts;
+    int depth = 0;
+    int start = 0;
+    for (int i = 0; i < text.size(); i++) {
+        if (text[i] == QLatin1Char('('))
+            depth++;
+        else if (text[i] == QLatin1Char(')'))
+            depth--;
+        else if (text[i] == separator && depth == 0) {
+            parts.append(text.mid(start, i - start));
+            start = i + 1;
+        }
+    }
+    parts.append(text.mid(start));
+    return parts;
+}
+
+bool Hotkey::fromText(const QString& text, Hotkey& hotkey)
+{
+    int equals = text.indexOf(QLatin1Char('='));
+    if (equals < 0)
+        return false;
+
+    QString condition = text.left(equals).trimmed();
+    bool mouseButton = false;
+    QString keys;
+    if (condition.startsWith(QLatin1String("keystroke(")) && condition.endsWith(QLatin1Char(')'))) {
+        keys = condition.mid(10, condition.size() - 11);
+    } else if (condition.startsWith(QLatin1String("mousebutton(")) && condition.endsWith(QLatin1Char(')'))) {
+        keys = condition.mid(12, condition.size() - 13);
+        mouseButton = true;
+    } else {
+        return false;
+    }
+
+    Hotkey result;
+    if (!KeySequence::fromString(keys.trimmed(), mouseButton, result.m_KeySequence))
+        return false;
+
+    QStringList phases = splitTopLevel(text.mid(equals + 1), QLatin1Char(';'));
+    if (phases.size() > 2)
+        return false;
+
+    for (int phase = 0; phase < phases.size(); phase++) {
+        if (phases[phase].trimmed().isEmpty())
+            continue;
+        for (const QString& actionText : splitTopLevel(phases[phase], QLatin1Char(','))) {
+            Action action;
+            if (!Action::fromText(actionText, phase == 1, action))
+                return false;
+            result.appendAction(action);
+        }
+    }
+
+    if (result.actions().empty())
+        return false;
+
+    hotkey = result;
+    return true;
+}

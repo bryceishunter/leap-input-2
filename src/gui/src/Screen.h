@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <QPixmap>
 #include <QString>
 #include <QList>
 #include <QStringList>
@@ -35,15 +34,13 @@ class Screen : public BaseConfig
     friend QDataStream& operator<<(QDataStream& outStream, const Screen& screen);
     friend QDataStream& operator>>(QDataStream& inStream, Screen& screen);
     friend class ScreenSettingsDialog;
-    friend class ScreenSetupModel;
-    friend class ScreenSetupView;
+    friend class ServerConfig;
 
     public:
         Screen();
         Screen(const QString& name);
 
     public:
-        const QPixmap* pixmap() const { return &m_Pixmap; }
         const QString& name() const { return m_Name; }
         const QStringList& aliases() const { return m_Aliases; }
 
@@ -66,15 +63,17 @@ class Screen : public BaseConfig
         QTextStream& writeScreensSection(QTextStream& outStream) const;
         QTextStream& writeAliasesSection(QTextStream& outStream) const;
 
-        bool swapped() const { return m_Swapped; }
         QString& name() { return m_Name; }
         void setName(const QString& name) { m_Name = name; }
 
+        // the name this screen had in the configuration file when it was
+        // loaded, empty for a screen added since; tells renames from new screens
+        const QString& originalName() const { return m_OriginalName; }
+        void setOriginalName(const QString& name) { m_OriginalName = name; }
+
     protected:
         void init();
-        QPixmap* pixmap() { return &m_Pixmap; }
 
-        void setPixmap(const QPixmap& pixmap) { m_Pixmap = pixmap; }
         QStringList& aliases() { return m_Aliases; }
         void setModifier(Modifier m, Modifier n) { m_Modifiers[static_cast<int>(m)] = n; }
         QList<Modifier>& modifiers() { return m_Modifiers; }
@@ -84,11 +83,10 @@ class Screen : public BaseConfig
         void setSwitchCornerSize(int val) { m_SwitchCornerSize = val; }
         void setFix(Fix f, bool on) { m_Fixes[static_cast<int>(f)] = on; }
         QList<bool>& fixes() { return m_Fixes; }
-        void setSwapped(bool on) { m_Swapped = on; }
 
     private:
-        QPixmap m_Pixmap;
         QString m_Name;
+        QString m_OriginalName;
 
         QStringList m_Aliases;
         QList<Modifier> m_Modifiers;
@@ -96,7 +94,6 @@ class Screen : public BaseConfig
         int m_SwitchCornerSize;
         QList<bool> m_Fixes;
 
-        bool m_Swapped;
 };
 
 QDataStream& operator<<(QDataStream& outStream, const Screen& screen);

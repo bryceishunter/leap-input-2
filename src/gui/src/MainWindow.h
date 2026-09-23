@@ -48,7 +48,6 @@ class QComboBox;
 class QTabWidget;
 class QCheckBox;
 class QRadioButton;
-class QTemporaryFile;
 class QMessageBox;
 class QAbstractButton;
 
@@ -137,6 +136,8 @@ public slots:
         void createMenuBar();
         void createTrayIcon();
         void loadSettings();
+        void loadServerConfig();
+        bool saveServerConfig();
         void saveSettings();
         void set_icon(AppConnectionState state);
         void set_connection_state(AppConnectionState state);
@@ -172,7 +173,8 @@ public slots:
         QProcess* cmd_app_process_;
         AppConnectionState connection_state_ = AppConnectionState::DISCONNECTED;
         ServerConfig m_ServerConfig;
-        QTemporaryFile* m_pTempConfigFile;
+        // why the configuration file could not be read, empty if it could
+        QString m_ServerConfigError;
         QSystemTrayIcon* m_pTrayIcon;
         QMenu* m_pTrayIconMenu;
         bool m_AlreadyHidden;
