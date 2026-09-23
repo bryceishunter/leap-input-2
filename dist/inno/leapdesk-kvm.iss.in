@@ -1,90 +1,728 @@
+; Leapdesk KVM installer for Windows, built as a server or a client installer.
+;
+; Build it with dist/inno/build-installers.ps1, which stages the binaries with
+; `cmake --install` and compiles this script once per role. CMake fills in the
+; version and source paths; the build script passes the rest:
+;   Role           Server or Client
+;   StagingDir     output of cmake --install
+;   OutputDir      where the installers go
+;   Revision       git revision, for the file name
+;   SeedConfig     optional, server: configuration to install when the machine has none
+;   DefaultServer  optional, client: server address offered by default
+;
+; Installing stops and removes earlier Leapdesk and Input Leap services and
+; installations, then installs the binaries afresh and registers the Leapdesk service.
+; Pairing certificates, the server configuration and logs live in the user's
+; %LOCALAPPDATA%\Leapdesk and are kept, both on reinstall and on uninstall.
+
 #define MyAppName "Leapdesk KVM"
 #define MyAppVersion "@INPUTLEAP_VERSION_MAJOR@.@INPUTLEAP_VERSION_MINOR@.@INPUTLEAP_VERSION_PATCH@"
-#define MyAppTextVersion "@INPUTLEAP_VERSION@"
 #define MyAppPublisher "Leapdesk KVM contributors"
 #define MyAppURL "https://github.com/bryceishunter/leapdesk-kvm"
-#define MyAppCopyright "Copyright (C) Leapdesk KVM contributors"
-#define MyAppExeName "leapdesk.exe"
-#define MyAppServiceName "Leapdesk"
-#define MyAppServiceExe "leapdesk-daemon.exe"
-#define MyAppServiceDesc "Manages the Leapdesk KVM background processes."
-#define MyAppListenerDesc "Leapdesk KVM Listener"
+#define RepoDir "@CMAKE_CURRENT_SOURCE_DIR@"
+#define ServiceName "Leapdesk"
+#define FirewallRule "Leapdesk KVM server"
+
+#ifndef Role
+  #error Define Role as Server or Client; build with dist/inno/build-installers.ps1
+#endif
+#if Role != "Server" && Role != "Client"
+  #error Role must be Server or Client
+#endif
+#ifndef StagingDir
+  #error Define StagingDir as the output of cmake --install
+#endif
+#ifndef OutputDir
+  #define OutputDir "."
+#endif
+#ifndef Revision
+  #define Revision ""
+#endif
+#ifndef DefaultServer
+  #define DefaultServer ""
+#endif
+
+#if Role == "Server"
+  #define RoleExe "leapdesk-server.exe"
+  #define RoleLog "server.log"
+#else
+  #define RoleExe "leapdesk-client.exe"
+  #define RoleLog "client.log"
+#endif
+
+#ifndef OutputName
+  #if Revision != ""
+    #define OutputName "LeapdeskKVM-" + Role + "-" + MyAppVersion + "-" + Revision
+  #else
+    #define OutputName "LeapdeskKVM-" + Role + "-" + MyAppVersion
+  #endif
+#endif
 
 [Setup]
 AppId={{41036EA6-3F7A-4803-8AE0-46912391EFCC}
 AppName={#MyAppName}
-AppVersion={#MyAppTextVersion}
-AppVerName={#MyAppName} {#MyAppTextVersion}
+AppVersion={#MyAppVersion}
+AppVerName={#MyAppName} {#Role} {#MyAppVersion}
+UninstallDisplayName={#MyAppName} ({#Role})
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
-AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\{#MyAppName}
+DefaultDirName={commonpf64}\Leapdesk
+DisableDirPage=yes
 DisableProgramGroupPage=yes
-LicenseFile=@CMAKE_CURRENT_SOURCE_DIR@/res/License.rtf
-OutputDir=@CMAKE_INSTALL_PREFIX@/../installer-inno/bin
-OutputBaseFilename=LeapdeskSetup-{#MyAppTextVersion}
-SetupIconFile=@CMAKE_CURRENT_SOURCE_DIR@/res/leapdesk.ico
-VersionInfoProductTextVersion={#MyAppTextVersion}
-VersionInfoProductVersion={#MyAppVersion}
-VersionInfoTextVersion={#MyAppTextVersion}
-VersionInfoVersion={#MyAppVersion}
-VersionInfoCopyright={#MyAppCopyright}
-
-Compression=lzma
+#ifdef SelfTest
+; selftest.iss checks the code below without installing, so it needs no elevation
+PrivilegesRequired=lowest
+#else
+PrivilegesRequired=admin
+#endif
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+; the Universal C Runtime ships with Windows 10 and later, so only the Visual C++ runtime is bundled
+MinVersion=10.0
+OutputDir={#OutputDir}
+OutputBaseFilename={#OutputName}
+SetupIconFile={#RepoDir}\res\leapdesk.ico
+#if Role == "Server"
+UninstallDisplayIcon={app}\leapdesk.exe
+#else
+UninstallDisplayIcon={app}\{#RoleExe}
+#endif
+WizardStyle=modern
+Compression=lzma2/max
 SolidCompression=yes
-ArchitecturesInstallIn64BitMode=x64
-UninstallDisplayIcon={app}\{#MyAppExeName}
-
-#include "scripts\lang\english.iss"
-
-[Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+; running Leapdesk and Input Leap programs are stopped by the code below instead
+CloseApplications=no
+RestartApplications=no
+SetupLogging=yes
+; the pairing certificates and the configuration belong to the user who runs the installer
+UsedUserAreasWarning=no
+VersionInfoVersion={#MyAppVersion}
+VersionInfoProductName={#MyAppName}
 
 [Files]
-Source: "@CMAKE_INSTALL_PREFIX@/*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+#if Role == "Server"
+Source: "{#StagingDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; \
+    Excludes: "leapdesk-client.exe,api-ms-win-*.dll,ucrtbase.dll,opengl32sw.dll,dxcompiler.dll,dxil.dll"
+  #ifdef SeedConfig
+Source: "{#SeedConfig}"; DestName: "seed.sgc"; Flags: dontcopy
+  #endif
+#else
+Source: "{#StagingDir}\leapdesk-daemon.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#StagingDir}\leapdesk-client.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#StagingDir}\msvcp140*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#StagingDir}\vcruntime140*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#StagingDir}\concrt140.dll"; DestDir: "{app}"; Flags: ignoreversion
+#endif
 
+#if Role == "Server"
 [Icons]
-Name: "{commonprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{commonprograms}\Leapdesk KVM Settings"; Filename: "{app}\leapdesk.exe"
 
 [Run]
-; there's no "check if exists" or "insert if not exists" for netsh's firewall commands
-; to avoid duplicate entries remove the existing rule (fails if it doesn't exist) before adding
-Filename: {sys}\netsh.exe; Parameters: "advfirewall firewall delete rule name=""{#MyAppListenerDesc}"""; Flags: runhidden
-Filename: {sys}\netsh.exe; Parameters: "advfirewall firewall add rule name=""{#MyAppListenerDesc}"" protocol=TCP dir=in localport=24800 action=allow"; Flags: runhidden
-Filename: {sys}\sc.exe; Parameters: "create {#MyAppServiceName} start= auto binPath= ""\""{app}\{#MyAppServiceExe}\"""""; Flags: runhidden
-Filename: {sys}\sc.exe; Parameters: "description {#MyAppServiceName} ""{#MyAppServiceDesc}"""; Flags: runhidden
-Filename: {sys}\sc.exe; Parameters: "start {#MyAppServiceName}"; Flags: runhidden
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-
-[UninstallDelete]
-Type: filesandordirs; Name: "{commonappdata}\Leapdesk"
-
-[UninstallRun]
-Filename: {sys}\taskkill; Parameters: "/im {#MyAppExeName} /f /t"; Flags: runhidden
-Filename: {sys}\net.exe; Parameters: "stop {#MyAppServiceName}"; Flags: runhidden
-Filename: {sys}\sc.exe; Parameters: "delete {#MyAppServiceName}"; Flags: runhidden
-Filename: {sys}\netsh.exe; Parameters: "advfirewall firewall delete rule name=""{#MyAppListenerDesc}"""; Flags: runhidden
-
-[CustomMessages]
-DependenciesDir="redist"
-
-; shared code for installing the products
-#include "scripts\products.iss"
-#include "scripts\products\stringversion.iss"
-#include "scripts\products\winversion.iss"
-#include "scripts\products\msiproduct.iss"
-#include "scripts\products\vcredist2017.iss"
+Filename: "{app}\leapdesk.exe"; Description: "Open the Leapdesk KVM settings"; \
+    Flags: nowait postinstall skipifsilent runasoriginaluser unchecked
+#endif
 
 [Code]
-function InitializeSetup(): boolean;
+const
+  LegacyServiceName = 'InputLeap';
+
+var
+  SettingsPage: TInputQueryWizardPage;
+  // the command lines of what was installed before, read before anything is removed
+  PreviousCommand: String;
+  PreviousLegacyCommand: String;
+  // shown on the last page, and logged
+  Notes: String;
+
+procedure AddNote(const Text: String);
 begin
-	// initialize windows version
-	initwinversion();
+  Log('Note: ' + Text);
+  if Notes <> '' then
+    Notes := Notes + #13#10#13#10;
+  Notes := Notes + Text;
+end;
 
-	vcredist2017('14'); // min allowed version is 14.0
+function RunHidden(const FileName, Params: String): Integer;
+begin
+  if not Exec(FileName, Params, '', SW_HIDE, ewWaitUntilTerminated, Result) then
+    Result := -1;
+  Log(Format('Ran %s %s: %d', [FileName, Params, Result]));
+end;
 
-	Result := true;
+function Sc(const Params: String): Integer;
+begin
+  Result := RunHidden(ExpandConstant('{sys}\sc.exe'), Params);
+end;
+
+// RUNNING, STOPPED, PENDING or MISSING
+function ServiceState(const Name: String): String;
+var
+  Output: TExecOutput;
+  Code, I: Integer;
+begin
+  Result := 'MISSING';
+  if not ExecAndCaptureOutput(ExpandConstant('{sys}\sc.exe'), 'query "' + Name + '"', '',
+                              SW_HIDE, ewWaitUntilTerminated, Code, Output) then
+    exit;
+  if Code = 1060 then
+    exit;
+  Result := 'PENDING';
+  for I := 0 to GetArrayLength(Output.StdOut) - 1 do
+    if Pos('STATE', Output.StdOut[I]) > 0 then
+    begin
+      if Pos('RUNNING', Output.StdOut[I]) > 0 then
+        Result := 'RUNNING'
+      else if Pos('STOPPED', Output.StdOut[I]) > 0 then
+        Result := 'STOPPED';
+    end;
+end;
+
+function WaitForServiceState(const Name, State: String; Seconds: Integer): Boolean;
+var
+  I: Integer;
+begin
+  for I := 1 to Seconds do
+  begin
+    if ServiceState(Name) = State then
+      break;
+    Sleep(1000);
+  end;
+  Result := ServiceState(Name) = State;
+end;
+
+// Stops a service without Windows restarting it: its recovery actions are
+// cleared first, since the processes are killed if it doesn't stop in time.
+procedure StopService(const Name: String);
+begin
+  if ServiceState(Name) = 'MISSING' then
+    exit;
+  Sc('failure "' + Name + '" reset= 0 actions= ""');
+  Sc('stop "' + Name + '"');
+  if not WaitForServiceState(Name, 'STOPPED', 30) then
+    Log('Service ' + Name + ' did not stop in time');
+end;
+
+procedure KillProcess(const Name: String);
+begin
+  RunHidden(ExpandConstant('{sys}\taskkill.exe'), '/f /t /im ' + Name);
+end;
+
+// the Leapdesk service and tray programs, the settings window, and the Input Leap ones
+procedure KillProcesses();
+begin
+  KillProcess('leapdesk-daemon.exe');
+  KillProcess('leapdesk-server.exe');
+  KillProcess('leapdesk-client.exe');
+  KillProcess('leapdesk.exe');
+  KillProcess('input-leapd.exe');
+  KillProcess('input-leaps.exe');
+  KillProcess('input-leapc.exe');
+  KillProcess('input-leap.exe');
+end;
+
+// Splits a command line into arguments, honouring double quotes.
+function SplitCommand(const Command: String): TArrayOfString;
+var
+  I, Count: Integer;
+  Current: String;
+  Quoted, HasArg: Boolean;
+begin
+  Count := 0;
+  Current := '';
+  Quoted := False;
+  HasArg := False;
+  SetArrayLength(Result, 0);
+  for I := 1 to Length(Command) do
+  begin
+    if Command[I] = '"' then
+    begin
+      Quoted := not Quoted;
+      HasArg := True;
+    end
+    else if ((Command[I] = ' ') or (Command[I] = #9)) and not Quoted then
+    begin
+      if HasArg then
+      begin
+        SetArrayLength(Result, Count + 1);
+        Result[Count] := Current;
+        Count := Count + 1;
+        Current := '';
+        HasArg := False;
+      end;
+    end
+    else
+    begin
+      Current := Current + Command[I];
+      HasArg := True;
+    end;
+  end;
+  if HasArg then
+  begin
+    SetArrayLength(Result, Count + 1);
+    Result[Count] := Current;
+  end;
+end;
+
+// The value after the first of two option names, e.g. --name, in a command line.
+function OptionValue(const Command, ShortName, LongName: String): String;
+var
+  Args: TArrayOfString;
+  I: Integer;
+begin
+  Result := '';
+  Args := SplitCommand(Command);
+  for I := 0 to GetArrayLength(Args) - 2 do
+    if (Args[I] = ShortName) or (Args[I] = LongName) then
+    begin
+      Result := Args[I + 1];
+      exit;
+    end;
+end;
+
+function IsClientCommand(const Command: String): Boolean;
+begin
+  Result := (Pos('leapdesk-client', Lowercase(Command)) > 0) or
+            (Pos('input-leapc', Lowercase(Command)) > 0);
+end;
+
+// the server address a client command ends with
+function CommandServer(const Command: String): String;
+var
+  Args: TArrayOfString;
+begin
+  Result := '';
+  if not IsClientCommand(Command) then
+    exit;
+  Args := SplitCommand(Command);
+  if GetArrayLength(Args) > 1 then
+    Result := Args[GetArrayLength(Args) - 1];
+end;
+
+function FirstNonEmpty(const A, B, C: String): String;
+begin
+  if A <> '' then
+    Result := A
+  else if B <> '' then
+    Result := B
+  else
+    Result := C;
+end;
+
+function ProfileDir(): String;
+begin
+  Result := ExpandConstant('{localappdata}\Leapdesk');
+end;
+
+function ConfigPath(): String;
+begin
+  Result := ProfileDir() + '\leapdesk.sgc';
+end;
+
+function ScreenName(): String;
+begin
+  Result := Trim(SettingsPage.Values[0]);
+end;
+
+function ServerAddress(): String;
+begin
+#if Role == "Client"
+  Result := Trim(SettingsPage.Values[1]);
+#else
+  Result := '';
+#endif
+end;
+
+// /LOGLEVEL=DEBUG on the installer's command line makes the service log more
+function LogLevel(): String;
+begin
+  Result := Uppercase(ExpandConstant('{param:LOGLEVEL|NOTE}'));
+  if Pos(',' + Result + ',', ',FATAL,ERROR,WARNING,NOTE,INFO,DEBUG,DEBUG1,DEBUG2,') = 0 then
+  begin
+    Log('Unknown log level ' + Result + ', using NOTE');
+    Result := 'NOTE';
+  end;
+end;
+
+function ServiceCommand(): String;
+begin
+  Result := '"' + ExpandConstant('{app}\{#RoleExe}') + '" -f --no-tray --ipc --debug ' + LogLevel() +
+            ' --name ' + ScreenName() +
+            ' --profile-dir "' + ProfileDir() + '"' +
+            ' --log "' + ProfileDir() + '\{#RoleLog}"';
+#if Role == "Server"
+  Result := Result + ' -c "' + ConfigPath() + '"';
+#else
+  // the server address has to be the last argument
+  Result := Result + ' ' + ServerAddress();
+#endif
+end;
+
+function IsValidScreenName(const Name: String): Boolean;
+var
+  I: Integer;
+begin
+  Result := Name <> '';
+  for I := 1 to Length(Name) do
+    if Pos(Lowercase(Name[I]), 'abcdefghijklmnopqrstuvwxyz0123456789-_.') = 0 then
+      Result := False;
+end;
+
+procedure InitializeWizard();
+var
+  PreviousName: String;
+begin
+  RegQueryStringValue(HKLM, 'SOFTWARE\Leapdesk', 'InstalledCommand', PreviousCommand);
+  if PreviousCommand = '' then
+    RegQueryStringValue(HKLM, 'SOFTWARE\Leapdesk', 'Command', PreviousCommand);
+  RegQueryStringValue(HKLM, 'SOFTWARE\InputLeap', 'Command', PreviousLegacyCommand);
+  Log('Previous command: ' + PreviousCommand);
+  Log('Previous Input Leap command: ' + PreviousLegacyCommand);
+
+  PreviousName := FirstNonEmpty(OptionValue(PreviousCommand, '-n', '--name'),
+                                OptionValue(PreviousLegacyCommand, '-n', '--name'), '');
+
+#if Role == "Server"
+  SettingsPage := CreateInputQueryPage(wpWelcome, 'Server settings',
+    'How this computer is known to its clients.',
+    'The screen name must match this computer''s name in the server configuration.');
+  SettingsPage.Add('Screen &name of this computer:', False);
+#else
+  SettingsPage := CreateInputQueryPage(wpWelcome, 'Client settings',
+    'How this computer finds the server.',
+    'The screen name must match this computer''s name in the server''s configuration.');
+  SettingsPage.Add('Screen &name of this computer:', False);
+  SettingsPage.Add('&Server address (host or host:port):', False);
+  SettingsPage.Values[1] := ExpandConstant('{param:SERVER|}');
+  if SettingsPage.Values[1] = '' then
+    SettingsPage.Values[1] := FirstNonEmpty(CommandServer(PreviousCommand),
+                                            CommandServer(PreviousLegacyCommand), '{#DefaultServer}');
+#endif
+  SettingsPage.Values[0] := ExpandConstant('{param:NAME|}');
+  if SettingsPage.Values[0] = '' then
+    SettingsPage.Values[0] := FirstNonEmpty(PreviousName, GetComputerNameString(), '');
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+begin
+  Result := True;
+  if CurPageID <> SettingsPage.ID then
+    exit;
+
+  if not IsValidScreenName(ScreenName()) then
+  begin
+    SuppressibleMsgBox('The screen name may use letters, digits, hyphens, underscores and dots.',
+                       mbError, MB_OK, IDOK);
+    Result := False;
+  end;
+#if Role == "Client"
+  if Result and ((ServerAddress() = '') or (Pos(' ', ServerAddress()) > 0)) then
+  begin
+    SuppressibleMsgBox('Enter the server''s address, for example 100.111.152.25 or 100.111.152.25:24800.',
+                       mbError, MB_OK, IDOK);
+    Result := False;
+  end;
+#endif
+  if not Result and WizardSilent() then
+    Abort();
+end;
+
+function UpdateReadyMemo(Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoTypeInfo,
+                         MemoComponentsInfo, MemoGroupInfo, MemoTasksInfo: String): String;
+begin
+  Result := 'Before installing:' + NewLine +
+    Space + 'Stop and remove the Leapdesk and Input Leap services' + NewLine +
+    Space + 'Close running Leapdesk and Input Leap programs, including the settings window' + NewLine +
+    Space + 'Remove the previous Leapdesk and Input Leap installations' + NewLine + NewLine +
+    'Then install the {#Role} into:' + NewLine + Space + ExpandConstant('{app}') + NewLine + NewLine +
+    'Run it as the Leapdesk service with:' + NewLine +
+    Space + 'Screen name: ' + ScreenName() + NewLine;
+#if Role == "Client"
+  Result := Result + Space + 'Server: ' + ServerAddress() + NewLine;
+#else
+  Result := Result + Space + 'Configuration: ' + ConfigPath() + NewLine;
+#endif
+  Result := Result + Space + 'Certificates and logs: ' + ProfileDir() + NewLine;
+end;
+
+// Deletes everything in the install folder but the uninstaller, which the
+// installation that follows keeps using.
+procedure ClearInstallDir();
+var
+  Dir: String;
+  Found: TFindRec;
+begin
+  Dir := ExpandConstant('{app}');
+  if FindFirst(Dir + '\*', Found) then
+  try
+    repeat
+      if (Found.Name <> '.') and (Found.Name <> '..') then
+      begin
+        if Found.Attributes and FILE_ATTRIBUTE_DIRECTORY <> 0 then
+          DelTree(Dir + '\' + Found.Name, True, True, True)
+        else if CompareText(Copy(Found.Name, 1, 5), 'unins') <> 0 then
+          DeleteFile(Dir + '\' + Found.Name);
+      end;
+    until not FindNext(Found);
+  finally
+    FindClose(Found);
+  end;
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  Result := '';
+
+  StopService('{#ServiceName}');
+  StopService(LegacyServiceName);
+  KillProcesses();
+
+  // Input Leap as the earlier scripts installed it
+  if ServiceState(LegacyServiceName) <> 'MISSING' then
+    Sc('delete "' + LegacyServiceName + '"');
+  RegDeleteKeyIncludingSubkeys(HKLM, 'SOFTWARE\InputLeap');
+  DelTree(ExpandConstant('{commonpf64}\InputLeap'), True, True, True);
+
+  // the previous Leapdesk installation, whether from the scripts or from this installer;
+  // the service itself is kept and pointed at the new files, so its name stays free of
+  // Windows' "marked for deletion" state
+  RegDeleteKeyIncludingSubkeys(HKLM, 'SOFTWARE\Leapdesk');
+  ClearInstallDir();
+
+  if FileExists(ExpandConstant('{app}\leapdesk-daemon.exe')) then
+    Result := 'The previous installation could not be removed from ' + ExpandConstant('{app}') +
+              '. Close any program using it and try again.';
+end;
+
+procedure CopyTree(const Source, Target: String);
+var
+  Found: TFindRec;
+begin
+  ForceDirectories(Target);
+  if FindFirst(Source + '\*', Found) then
+  try
+    repeat
+      if (Found.Name <> '.') and (Found.Name <> '..') then
+      begin
+        if Found.Attributes and FILE_ATTRIBUTE_DIRECTORY <> 0 then
+          CopyTree(Source + '\' + Found.Name, Target + '\' + Found.Name)
+        else
+          CopyFile(Source + '\' + Found.Name, Target + '\' + Found.Name, False);
+      end;
+    until not FindNext(Found);
+  finally
+    FindClose(Found);
+  end;
+end;
+
+// Puts the pairing certificate where the service looks for it: one shipped next
+// to the installer (from new-pairing.ps1) wins, then the one already installed,
+// then Input Leap's.
+procedure InstallCertificates();
+var
+  Target, Shipped, Legacy: String;
+begin
+  Target := ProfileDir() + '\SSL';
+  Shipped := ExpandConstant('{src}\SSL');
+  Legacy := ExpandConstant('{localappdata}\InputLeap\SSL');
+
+  if FileExists(Shipped + '\Leapdesk.pem') then
+  begin
+    if DirExists(Target) then
+      RenameFile(Target, Target + '.replaced-' + GetDateTimeString('yyyymmdd-hhnnss', '-', ':'));
+    CopyTree(Shipped, Target);
+    AddNote('Installed the pairing certificate from ' + Shipped + '.');
+  end
+  else if FileExists(Target + '\Leapdesk.pem') then
+    Log('Kept the pairing certificate in ' + Target)
+  else if FileExists(Legacy + '\InputLeap.pem') then
+  begin
+    ForceDirectories(Target + '\Fingerprints');
+    CopyFile(Legacy + '\InputLeap.pem', Target + '\Leapdesk.pem', False);
+    if DirExists(Legacy + '\Fingerprints') then
+      CopyTree(Legacy + '\Fingerprints', Target + '\Fingerprints');
+    AddNote('Moved the pairing certificate over from Input Leap.');
+  end
+  else
+    AddNote('No pairing certificate was found, so the {#Role} cannot connect yet. Run ' +
+            'new-pairing.ps1 on the server, then run this installer again with the SSL folder ' +
+            'it makes next to it.');
+end;
+
+#if Role == "Server"
+function ConfigHasScreen(const Path, Name: String): Boolean;
+var
+  Lines: TArrayOfString;
+  I: Integer;
+begin
+  Result := False;
+  if not LoadStringsFromFile(Path, Lines) then
+    exit;
+  for I := 0 to GetArrayLength(Lines) - 1 do
+    if CompareText(Trim(Lines[I]), Name + ':') = 0 then
+      Result := True;
+end;
+
+// Keeps the configuration already in place; otherwise takes, in order, one next
+// to the installer, the one the previous service used, the one built into this
+// installer, or a new one holding just this computer.
+procedure InstallConfig();
+var
+  Target, Previous: String;
+begin
+  Target := ConfigPath();
+  Previous := FirstNonEmpty(OptionValue(PreviousCommand, '-c', '--config'),
+                            OptionValue(PreviousLegacyCommand, '-c', '--config'), '');
+
+  if FileExists(Target) then
+    Log('Kept the configuration in ' + Target)
+  else if FileExists(ExpandConstant('{src}\leapdesk.sgc')) then
+  begin
+    CopyFile(ExpandConstant('{src}\leapdesk.sgc'), Target, False);
+    AddNote('Installed the configuration next to the installer as ' + Target + '.');
+  end
+  else if (Previous <> '') and FileExists(Previous) then
+  begin
+    CopyFile(Previous, Target, False);
+    AddNote('Copied the configuration the previous service used, ' + Previous + ', to ' + Target +
+            '. Edit that copy from now on.');
+  end
+  else
+  begin
+  #ifdef SeedConfig
+    ExtractTemporaryFile('seed.sgc');
+    CopyFile(ExpandConstant('{tmp}\seed.sgc'), Target, False);
+    AddNote('Installed the configuration built into this installer as ' + Target + '.');
+  #else
+    SaveStringToFile(Target, '# Leapdesk KVM server configuration.' + #13#10 + #13#10 +
+                     'section: screens' + #13#10 + #9 + ScreenName() + ':' + #13#10 + 'end' + #13#10,
+                     False);
+    AddNote('Created a configuration holding only this computer, ' + Target +
+            '. Add the clients with the Leapdesk KVM settings.');
+  #endif
+  end;
+
+  if not ConfigHasScreen(Target, ScreenName()) then
+    AddNote('The configuration has no screen named ' + ScreenName() + ', so the server will not ' +
+            'start until it has. Fix it with the Leapdesk KVM settings.');
+end;
+
+procedure ConfigureFirewall();
+var
+  Script, ServerExe: String;
+  Code: Integer;
+begin
+  ServerExe := ExpandConstant('{app}\leapdesk-server.exe');
+  Script := ExpandConstant('{tmp}\firewall.ps1');
+  SaveStringToFile(Script,
+    '$ErrorActionPreference = ''Stop''' + #13#10 +
+    '$program = ''' + ServerExe + '''' + #13#10 +
+    'foreach ($old in ''{#FirewallRule}'', ''Input Leap (Tailscale)'', ''Leapdesk KVM Listener'') {' + #13#10 +
+    '    Get-NetFirewallRule -DisplayName $old -ErrorAction SilentlyContinue | Remove-NetFirewallRule' + #13#10 +
+    '}' + #13#10 +
+    '$tailscale = Get-NetAdapter -ErrorAction SilentlyContinue |' + #13#10 +
+    '    Where-Object { $_.InterfaceDescription -like ''Tailscale*'' } | Select-Object -First 1' + #13#10 +
+    'if ($tailscale) {' + #13#10 +
+    '    New-NetFirewallRule -DisplayName ''{#FirewallRule}'' -Direction Inbound -Protocol TCP -LocalPort 24800 ' +
+    '-Program $program -InterfaceAlias $tailscale.Name -Action Allow | Out-Null' + #13#10 +
+    '    exit 10' + #13#10 +
+    '}' + #13#10 +
+    'New-NetFirewallRule -DisplayName ''{#FirewallRule}'' -Direction Inbound -Protocol TCP -LocalPort 24800 ' +
+    '-Program $program -Profile Domain, Private -Action Allow | Out-Null' + #13#10 +
+    'exit 11' + #13#10, False);
+  Code := RunHidden(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+                    '-NoProfile -ExecutionPolicy Bypass -File "' + Script + '"');
+  if Code = 10 then
+    Log('Allowed the server through the firewall on the Tailscale interface')
+  else if Code = 11 then
+    AddNote('No Tailscale network adapter was found, so the firewall lets clients in over ' +
+            'private networks instead.')
+  else
+    AddNote('Could not add the firewall rule for the server (PowerShell exit code ' +
+            IntToStr(Code) + '). Clients may not be able to connect.');
+end;
+
+// Opens the settings window on the installed configuration, without its first-run wizard.
+procedure ConfigureSettingsWindow();
+var
+  Key: String;
+begin
+  Key := 'Software\Leapdesk\Leapdesk';
+  RegWriteStringValue(HKCU, Key, 'configFile', ConfigPath());
+  RegWriteStringValue(HKCU, Key, 'screenName', ScreenName());
+  RegWriteStringValue(HKCU, Key, 'groupServerChecked', 'true');
+  RegWriteStringValue(HKCU, Key, 'groupClientChecked', 'false');
+  if not RegValueExists(HKCU, Key, 'wizardLastRun') then
+    RegWriteDWordValue(HKCU, Key, 'wizardLastRun', 9);
+  if not RegValueExists(HKCU, Key, 'autoConfigPrompted') then
+    RegWriteStringValue(HKCU, Key, 'autoConfigPrompted', 'true');
+end;
+#endif
+
+procedure InstallService();
+var
+  BinPath: String;
+begin
+  // the service runs the command below as SYSTEM in the signed-in session; the
+  // settings window reuses InstalledCommand to start it again after a stop
+  RegWriteStringValue(HKLM, 'SOFTWARE\Leapdesk', 'Command', ServiceCommand());
+  RegWriteStringValue(HKLM, 'SOFTWARE\Leapdesk', 'Elevate', '1');
+  RegWriteStringValue(HKLM, 'SOFTWARE\Leapdesk', 'InstalledCommand', ServiceCommand());
+  RegWriteStringValue(HKLM, 'SOFTWARE\Leapdesk', 'InstalledRole', '{#Role}');
+
+  BinPath := 'binPath= "\"' + ExpandConstant('{app}\leapdesk-daemon.exe') + '\"" start= auto type= own';
+  if ServiceState('{#ServiceName}') = 'MISSING' then
+    Sc('create {#ServiceName} ' + BinPath + ' DisplayName= "Leapdesk KVM"')
+  else
+    Sc('config {#ServiceName} ' + BinPath + ' DisplayName= "Leapdesk KVM"');
+  Sc('description {#ServiceName} "Runs the Leapdesk KVM {#Role} in the signed-in session."');
+  // come back after a crash: 5 seconds, then 10, then a minute; start counting again after a day
+  Sc('failure {#ServiceName} reset= 86400 actions= restart/5000/restart/10000/restart/60000');
+  Sc('failureflag {#ServiceName} 1');
+  Sc('start {#ServiceName}');
+
+  if WaitForServiceState('{#ServiceName}', 'RUNNING', 20) then
+    Log('The service is running')
+  else
+    AddNote('The Leapdesk service did not start. See ' +
+            ExpandConstant('{commonappdata}\Leapdesk\leapdesk-daemon.log') + '.');
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep <> ssPostInstall then
+    exit;
+  ForceDirectories(ProfileDir());
+  InstallCertificates();
+#if Role == "Server"
+  InstallConfig();
+  ConfigureFirewall();
+  ConfigureSettingsWindow();
+#endif
+  InstallService();
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if (CurPageID = wpFinished) and (Notes <> '') then
+  begin
+    WizardForm.FinishedLabel.Caption := WizardForm.FinishedLabel.Caption + #13#10#13#10 + Notes;
+    WizardForm.AdjustLabelHeight(WizardForm.FinishedLabel);
+  end;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep <> usUninstall then
+    exit;
+  StopService('{#ServiceName}');
+  KillProcesses();
+  if ServiceState('{#ServiceName}') <> 'MISSING' then
+    Sc('delete {#ServiceName}');
+  RegDeleteKeyIncludingSubkeys(HKLM, 'SOFTWARE\Leapdesk');
+  RunHidden(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+            '-NoProfile -Command "Get-NetFirewallRule -DisplayName ''{#FirewallRule}'' ' +
+            '-ErrorAction SilentlyContinue | Remove-NetFirewallRule"');
+  // certificates, the configuration and logs in %LOCALAPPDATA%\Leapdesk are kept
 end;
