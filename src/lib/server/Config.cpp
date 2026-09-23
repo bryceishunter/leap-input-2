@@ -23,6 +23,7 @@
 #include "inputleap/key_types.h"
 #include "net/XSocket.h"
 
+#include <cmath>
 #include <cstdlib>
 
 namespace inputleap {
@@ -125,7 +126,7 @@ void Config::removeScreen(const std::string& name)
 			m_nameToCanonicalName.erase(iter++);
 		}
 		else {
-			++index;
+			++iter;
 		}
 	}
 }
@@ -280,8 +281,8 @@ bool Config::addOption(const std::string& name, OptionID option, OptionValue val
 		return false;
 	}
 
-	// add option
-	options->insert(std::make_pair(option, value));
+	// add option, replacing any earlier value
+	(*options)[option] = value;
 	return true;
 }
 
@@ -598,13 +599,27 @@ Config::dirName(EDirection dir)
 	return s_name[dir - kFirstDirection];
 }
 
+// Writes a 0..1 fraction as a percentage with up to two decimals, so that
+// intervals such as 42.86 survive a read and write unchanged.
+// Uses integer hundredths rather than %f, which follows the C locale.
+static std::string formatPercent(float fraction)
+{
+    long hundredths = std::lround(fraction * 10000.0f);
+    std::string text = std::to_string(hundredths / 100);
+    long decimals = hundredths % 100;
+    if (decimals != 0) {
+        text += inputleap::string::sprintf(decimals % 10 == 0 ? ".%d" : ".%02d",
+                                           static_cast<int>(decimals % 10 == 0 ? decimals / 10 : decimals));
+    }
+    return text;
+}
+
 std::string Config::formatInterval(const Interval& x)
 {
 	if (x.first == 0.0f && x.second == 1.0f) {
 		return "";
 	}
-    return inputleap::string::sprintf("(%d,%d)", static_cast<int>(x.first * 100.0f + 0.5f),
-                                        static_cast<int>(x.second * 100.0f + 0.5f));
+    return "(" + formatPercent(x.first) + "," + formatPercent(x.second) + ")";
 }
 
 void
