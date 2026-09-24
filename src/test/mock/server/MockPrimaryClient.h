@@ -20,6 +20,7 @@
 #define INPUTLEAP_TEST_ENV
 
 #include "server/PrimaryClient.h"
+#include "inputleap/FileClip.h"
 
 #include <gmock/gmock.h>
 
@@ -39,6 +40,11 @@ public:
     MOCK_METHOD2(registerHotKey, std::uint32_t(KeyID, KeyModifierMask));
     MOCK_CONST_METHOD0(getToggleMask, KeyModifierMask());
     MOCK_METHOD1(unregisterHotKey, void(std::uint32_t));
+    // these reach the screen, which a mock primary doesn't have
+    MOCK_METHOD1(grabClipboard, void(ClipboardID));
+    MOCK_METHOD2(setClipboard, void(ClipboardID, const IClipboard*));
+    MOCK_METHOD1(send_files, void(const FilePasteRequest&));
+    MOCK_METHOD1(file_paste_status, void(const FilePasteStatus&));
 };
 
 } // namespace inputleap

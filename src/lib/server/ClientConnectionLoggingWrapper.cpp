@@ -18,6 +18,7 @@
 #include "base/Log.h"
 #include "inputleap/ClipboardChunk.h"
 #include "inputleap/FileChunk.h"
+#include "inputleap/FileClip.h"
 #include "inputleap/ProtocolUtil.h"
 #include "inputleap/protocol_types.h"
 #include "io/IStream.h"
@@ -204,6 +205,22 @@ void ClientConnectionLoggingWrapper::send_grab_clipboard(ClipboardID id)
 {
     LOG_DEBUG("send grab clipboard %d to \"%s\"", id, name_.c_str());
     conn_->send_grab_clipboard(id);
+}
+
+void ClientConnectionLoggingWrapper::send_file_send_1_7(const FilePasteRequest& request)
+{
+    LOG_DEBUG("send file send request=%s file_id=%s address=%s to \"%s\"",
+              request.request.c_str(), request.file_id.c_str(), request.address.c_str(),
+              name_.c_str());
+    conn_->send_file_send_1_7(request);
+}
+
+void ClientConnectionLoggingWrapper::send_file_status_1_7(const FilePasteStatus& status)
+{
+    LOG_DEBUG("send file status request=%s state=%d detail=%s to \"%s\"",
+              status.request.c_str(), static_cast<int>(status.state), status.detail.c_str(),
+              name_.c_str());
+    conn_->send_file_status_1_7(status);
 }
 
 void ClientConnectionLoggingWrapper::flush()

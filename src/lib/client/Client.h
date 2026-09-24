@@ -89,6 +89,19 @@ public:
     //! Send dragging file information back to server
     void sendDragInfo(std::uint32_t fileCount, std::string& info, size_t size);
 
+    //! Send copied files
+    /*!
+    Another screen pasted the files this screen copied; send them if they
+    are still on the clipboard.
+    */
+    void send_files(const FilePasteRequest& request);
+
+    //! Notify of file paste progress
+    /*!
+    Reports how a paste this screen asked for is going.
+    */
+    void file_paste_status(const FilePasteStatus& status);
+
 
     //@}
     //! @name accessors
@@ -178,6 +191,8 @@ private:
     void handle_disconnected();
     void handle_shape_changed();
     void handle_clipboard_grabbed(const Event& event);
+    void handle_file_paste_requested(const Event& event);
+    void handle_file_paste_status(const Event& event);
     void handle_hello();
     void handle_suspend();
     void handle_resume();
@@ -198,6 +213,8 @@ private:
     inputleap::IStream* m_stream;
     EventQueueTimer* m_timer;
     ServerProxy* m_server;
+    // protocol minor version agreed with the server
+    std::int16_t m_protocol_minor;
     bool m_ready;
     bool m_active;
     bool m_suspended;

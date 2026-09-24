@@ -243,6 +243,16 @@ void PrimaryClient::sendDragInfo(std::uint32_t fileCount, const char* info, size
     // ignore
 }
 
+void PrimaryClient::send_files(const FilePasteRequest& request)
+{
+    m_screen->send_files(request);
+}
+
+void PrimaryClient::file_paste_status(const FilePasteStatus& status)
+{
+    m_screen->file_paste_status(status);
+}
+
 void PrimaryClient::file_chunk_sending(const FileChunk& chunk)
 {
     (void) chunk;

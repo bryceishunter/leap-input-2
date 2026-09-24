@@ -22,11 +22,15 @@
 #include "platform/MSWindowsDropTarget.h"
 #include "client/Client.h"
 #include "platform/MSWindowsClipboard.h"
+#include "platform/MSWindowsClipboardFilesConverter.h"
 #include "platform/MSWindowsDesks.h"
+#include "platform/MSWindowsFilePaste.h"
 #include "platform/MSWindowsEventQueueBuffer.h"
 #include "platform/MSWindowsKeyState.h"
 #include "platform/MSWindowsScreenSaver.h"
+#include "platform/MSWindowsTaildrop.h"
 #include "inputleap/Clipboard.h"
+#include "inputleap/FileClip.h"
 #include "inputleap/KeyMap.h"
 #include "inputleap/XScreen.h"
 #include "inputleap/App.h"
@@ -35,6 +39,7 @@
 #include "mt/Thread.h"
 #include "arch/win32/ArchMiscWindows.h"
 #include "arch/Arch.h"
+#include "common/DataDirectories.h"
 #include "base/Log.h"
 #include "base/IEventQueue.h"
 #include "base/EventQueueTimer.h"
@@ -156,6 +161,25 @@ MSWindowsScreen::MSWindowsScreen(
         throw;
     }
 
+    // report file sends as events, which are safe to post from its thread
+    m_taildrop = std::make_unique<MSWindowsTaildrop>([this](const FilePasteStatus& status) {
+        m_events->add_event(EventType::FILE_PASTE_STATUS, get_event_target(),
+                            create_event_data<FilePasteStatus>(status));
+    });
+
+    // and ask for files the same way when an application pastes them
+    MSWindowsFilePaste::Settings paste;
+    paste.request = [this](const FilePasteRequest& request) {
+        m_events->add_event(EventType::FILE_PASTE_REQUESTED, get_event_target(),
+                            create_event_data<FilePasteRequest>(request));
+    };
+    paste.own_address = &MSWindowsTaildrop::own_address;
+    paste.received_folder = &MSWindowsTaildrop::received_folder;
+    paste.staging_folder = (DataDirectories::profile() / "Pasted").wstring();
+    m_file_paste = std::make_unique<MSWindowsFilePaste>(std::move(paste));
+    // disconnected until enabled
+    m_file_paste->set_connected(false);
+
     // install event handlers
     m_events->add_handler(EventType::SYSTEM, m_events->getSystemTarget(),
                           [this](const auto& e){ handle_system_event(e); });
@@ -169,6 +193,12 @@ MSWindowsScreen::~MSWindowsScreen()
     assert(s_screen != nullptr);
 
     disable();
+
+    // stop file pastes and sends while the event queue can still take what
+    // they post from their own threads
+    m_file_paste.reset();
+    m_taildrop.reset();
+
     m_events->set_buffer(nullptr);
     m_events->remove_handler(EventType::SYSTEM, m_events->getSystemTarget());
     delete m_keyState;
@@ -205,6 +235,9 @@ MSWindowsScreen::enable()
 {
     assert(m_isOnScreen == m_isPrimary);
 
+    // a client is enabled once connected, the server while it runs
+    m_file_paste->set_connected(true);
+
     // we need to poll some things to fix them
     m_fixTimer = m_events->newTimer(1.0, nullptr);
     m_events->add_handler(EventType::TIMER, m_fixTimer,
@@ -234,6 +267,9 @@ MSWindowsScreen::enable()
 void
 MSWindowsScreen::disable()
 {
+    // a paste can't reach the screen with the files now, so it fails at once
+    m_file_paste->set_connected(false);
+
     // stop tracking the active desk
     m_desks->disable();
 
@@ -384,6 +420,13 @@ void MSWindowsScreen::send_drag_thread()
 bool
 MSWindowsScreen::setClipboard(ClipboardID, const IClipboard* src)
 {
+    // files copied on another screen are offered by the paste thread, which
+    // can wait for them when an application pastes
+    if (src != nullptr && m_file_paste->offer(*src)) {
+        return true;
+    }
+    m_file_paste->supersede();
+
     MSWindowsClipboard dst(m_window);
     if (src != nullptr) {
         // save clipboard data
@@ -420,6 +463,53 @@ MSWindowsScreen::checkClipboards()
         sendClipboardEvent(EventType::CLIPBOARD_GRABBED, kClipboardClipboard);
         sendClipboardEvent(EventType::CLIPBOARD_GRABBED, kClipboardSelection);
     }
+}
+
+void MSWindowsScreen::file_paste_status(const FilePasteStatus& status)
+{
+    m_file_paste->status(status);
+}
+
+bool MSWindowsScreen::send_files(const FilePasteRequest& request)
+{
+    auto fail = [this, &request](const char* reason) {
+        LOG_NOTE("not sending files for paste %s: %s", request.request.c_str(), reason);
+        m_events->add_event(EventType::FILE_PASTE_STATUS, get_event_target(),
+                            create_event_data<FilePasteStatus>(FilePasteStatus{
+                                request.request, FilePasteState::FAILED, reason}));
+    };
+
+    // the request names the files only by id, so read them off the clipboard
+    // again: only what the user has copied here now can be sent
+    std::vector<std::wstring> paths;
+    MSWindowsClipboard clipboard(m_window);
+    if (!clipboard.open(0)) {
+        fail("the clipboard is in use");
+        return true;
+    }
+    if (!MSWindowsClipboard::is_owned_by_us() && IsClipboardFormatAvailable(CF_HDROP)) {
+        HANDLE data = GetClipboardData(CF_HDROP);
+        if (data != nullptr) {
+            paths = MSWindowsClipboardFilesConverter::get_paths(data);
+        }
+    }
+    clipboard.close();
+
+    FileClip clip;
+    if (!MSWindowsClipboardFilesConverter::make_file_clip(paths, clip) ||
+        clip.id != request.file_id) {
+        fail("the files are no longer on the clipboard");
+        return true;
+    }
+
+    std::vector<std::string> names;
+    for (std::size_t i = 0; i < clip.files.size(); ++i) {
+        names.push_back(clip.transfer_name(request.request, i));
+    }
+    if (!m_taildrop->send(request.request, paths, names, request.address)) {
+        fail("another paste is still being sent");
+    }
+    return true;
 }
 
 void

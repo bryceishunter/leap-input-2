@@ -138,6 +138,21 @@ public:
     //! Change dragging status
     virtual void setDraggingStarted(bool started) = 0;
 
+    //! Send copied files
+    /*!
+    Another screen pasted the files on this screen's clipboard.  Send them
+    to \c request.address if the clipboard still holds files with id
+    \c request.file_id, and report progress with FILE_PASTE_STATUS events.
+    Return false if this screen can't send files at all.
+    */
+    virtual bool send_files(const FilePasteRequest& request) { (void) request; return false; }
+
+    //! Notify of file paste progress
+    /*!
+    Reports how a paste this screen asked for with FILE_PASTE_REQUESTED is going.
+    */
+    virtual void file_paste_status(const FilePasteStatus& status) { (void) status; }
+
     //@}
     //! @name accessors
     //@{

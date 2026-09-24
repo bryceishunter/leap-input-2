@@ -33,9 +33,14 @@ namespace inputleap {
 // 1.4:  adds crypto support
 // 1.5:  adds file transfer and removes home brew crypto
 // 1.6:  adds clipboard streaming
+// 1.7:  adds pasting files copied on another screen (Leapdesk KVM)
 // NOTE: with new version, InputLeap minor version should increment
 static const std::int16_t kProtocolMajorVersion = 1;
-static const std::int16_t kProtocolMinorVersion = 6;
+static const std::int16_t kProtocolMinorVersion = 7;
+
+// the oldest version this build still speaks, to peers that don't know
+// the newer messages
+static const std::int16_t kProtocolMinimumMinorVersion = 6;
 
 // default contact port number
 static const std::uint16_t kDefaultPort = 24800;
@@ -182,6 +187,13 @@ extern const char*        kMsgCInfoAck;
 // defined by an option.
 extern const char*        kMsgCKeepAlive;
 
+// send copied files:  primary -> secondary
+// a screen pasted the files this secondary copied.  $1 = paste request,
+// $2 = FileClip id of the files, $3 = address to send them to.  the
+// secondary sends them only if its clipboard still holds files with that
+// id, and reports progress with kMsgDFileStatus.  since 1.7.
+extern const char*        kMsgCFileSend;
+
 //
 // data codes
 //
@@ -283,6 +295,12 @@ extern const char*        kMsgDFileTransfer;
 // of each object's directory.
 extern const char*        kMsgDDragInfo;
 
+// file paste status:  primary <-> secondary
+// $1 = paste request, $2 = FilePasteState, $3 = detail for the log or the
+// user.  sent by the secondary sending files for a kMsgCFileSend, and by
+// the primary to the secondary that asked with kMsgQFilePaste.  since 1.7.
+extern const char*        kMsgDFileStatus;
+
 //
 // query codes
 //
@@ -290,6 +308,14 @@ extern const char*        kMsgDDragInfo;
 // query screen info:  primary -> secondary
 // client should reply with a kMsgDInfo.
 extern const char*        kMsgQInfo;
+
+// paste files:  secondary -> primary
+// the user pasted files that were copied on another screen.  $1 = paste
+// request, chosen by the secondary, $2 = FileClip id of the files,
+// $3 = address to send them to.  the primary forwards the request to the
+// screen that owns the clipboard with kMsgCFileSend, and relays its
+// kMsgDFileStatus replies.  since 1.7.
+extern const char*        kMsgQFilePaste;
 
 
 //

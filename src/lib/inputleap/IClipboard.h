@@ -57,6 +57,10 @@ public:
     \c kHTML is a text format encoded in UTF-8 and containing a valid
     HTML fragment (but not necessarily a complete HTML document).
     Newlines are LF.
+
+    \c kFiles is FileClip::marshall(): the names and sizes of files copied
+    on the screen that owns the clipboard, not their contents.  A paste on
+    another screen asks that screen to send them.
     */
     enum EFormat {
         kText,            //!< Text format, UTF-8, newline is LF
@@ -66,6 +70,7 @@ public:
         kJpeg,            //!< JPEG format
         kTiff,            //!< TIFF format
         kWebp,            //!< WEBP format
+        kFiles,           //!< Files copied on some screen, a FileClip
         kNumFormats        //!< The number of clipboard formats
     };
 

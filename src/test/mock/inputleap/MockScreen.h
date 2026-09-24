@@ -20,6 +20,8 @@
 #define INPUTLEAP_TEST_ENV
 
 #include "base/EventTarget.h"
+#include "inputleap/FileClip.h"
+#include "inputleap/IClipboard.h"
 #include "inputleap/Screen.h"
 
 #include <gmock/gmock.h>
@@ -37,6 +39,9 @@ public:
     MOCK_METHOD0(resetOptions, void());
     MOCK_METHOD1(setOptions, void(const OptionsList&));
     MOCK_METHOD0(enable, void());
+    MOCK_CONST_METHOD2(getClipboard, bool(ClipboardID, IClipboard*));
+    MOCK_METHOD1(send_files, void(const FilePasteRequest&));
+    MOCK_METHOD1(file_paste_status, void(const FilePasteStatus&));
 };
 
 } // namespace inputleap

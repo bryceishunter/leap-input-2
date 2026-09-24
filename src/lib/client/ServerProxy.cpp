@@ -20,6 +20,7 @@
 
 #include "client/Client.h"
 #include "inputleap/FileChunk.h"
+#include "inputleap/FileClip.h"
 #include "inputleap/ClipboardChunk.h"
 #include "inputleap/StreamChunker.h"
 #include "inputleap/Clipboard.h"
@@ -304,6 +305,18 @@ ServerProxy::EResult ServerProxy::parseMessage(const std::uint8_t* code)
     }
     else if (memcmp(code, kMsgDDragInfo, 4) == 0) {
         dragInfoReceived();
+    }
+
+    else if (memcmp(code, kMsgCFileSend, 4) == 0) {
+        if (!file_send()) {
+            return kUnknown;
+        }
+    }
+
+    else if (memcmp(code, kMsgDFileStatus, 4) == 0) {
+        if (!file_status()) {
+            return kUnknown;
+        }
     }
 
     else if (memcmp(code, kMsgCClose, 4) == 0) {
@@ -903,6 +916,63 @@ void ServerProxy::sendDragInfo(std::uint32_t fileCount, const char* info, size_t
 {
     std::string data(info, size);
     ProtocolUtil::writef(m_stream, kMsgDDragInfo, fileCount, &data);
+}
+
+void ServerProxy::request_file_paste(const FilePasteRequest& request)
+{
+    LOG_DEBUG("sending file paste request=%s file_id=%s address=%s", request.request.c_str(),
+              request.file_id.c_str(), request.address.c_str());
+    ProtocolUtil::writef(m_stream, kMsgQFilePaste, &request.request, &request.file_id,
+                         &request.address);
+}
+
+void ServerProxy::send_file_paste_status(const FilePasteStatus& status)
+{
+    LOG_DEBUG("sending file status request=%s state=%d detail=%s", status.request.c_str(),
+              static_cast<int>(status.state), status.detail.c_str());
+    ProtocolUtil::writef(m_stream, kMsgDFileStatus, &status.request,
+                         static_cast<std::uint32_t>(status.state), &status.detail);
+}
+
+bool ServerProxy::file_send()
+{
+    FilePasteRequest request;
+    if (!ProtocolUtil::readf(m_stream, kMsgCFileSend + 4, &request.request, &request.file_id,
+                             &request.address)) {
+        return false;
+    }
+    LOG_DEBUG("recv file send request=%s file_id=%s address=%s", request.request.c_str(),
+              request.file_id.c_str(), request.address.c_str());
+
+    // the address goes on a command line and the request into file names
+    if (!is_valid_paste_request(request.request) || !is_valid_paste_address(request.address)) {
+        LOG_WARN("ignored malformed request from the server to send files");
+        send_file_paste_status(FilePasteStatus{request.request, FilePasteState::FAILED,
+                                               "the paste request is malformed"});
+        return true;
+    }
+    m_client->send_files(request);
+    return true;
+}
+
+bool ServerProxy::file_status()
+{
+    FilePasteStatus status;
+    std::uint8_t state;
+    if (!ProtocolUtil::readf(m_stream, kMsgDFileStatus + 4, &status.request, &state,
+                             &status.detail)) {
+        return false;
+    }
+    if (state < static_cast<std::uint8_t>(FilePasteState::SENDING) ||
+        state > static_cast<std::uint8_t>(FilePasteState::FAILED)) {
+        LOG_ERR("unknown file paste state %d from server", state);
+        return false;
+    }
+    status.state = static_cast<FilePasteState>(state);
+    LOG_DEBUG("recv file status request=%s state=%d detail=%s", status.request.c_str(), state,
+              status.detail.c_str());
+    m_client->file_paste_status(status);
+    return true;
 }
 
 } // namespace inputleap

@@ -22,6 +22,7 @@
 #include "base/ELevel.h"
 #include "server/Server.h"
 #include "server/ClientProxy1_6.h"
+#include "server/ClientProxy1_7.h"
 #include "inputleap/protocol_types.h"
 #include "inputleap/ProtocolUtil.h"
 #include "inputleap/Exceptions.h"
@@ -184,6 +185,9 @@ void ClientProxyUnknown::handle_data()
                 switch (minor) {
                 case 6:
                     m_proxy = new ClientProxy1_6(name, std::move(conn), m_server, m_events);
+                    break;
+                case 7:
+                    m_proxy = new ClientProxy1_7(name, std::move(conn), m_server, m_events);
                     break;
                 default:
                     break;

@@ -45,6 +45,20 @@ public:
     */
     void setJumpCursorPos(std::int32_t x, std::int32_t y);
 
+    //! Send copied files
+    /*!
+    Asks this screen to send the files on its clipboard for a paste on
+    another screen.  It reports back with FilePasteStatus, which the
+    server passes on to the pasting screen.
+    */
+    virtual void send_files(const FilePasteRequest& request) { (void) request; }
+
+    //! Notify of file paste progress
+    /*!
+    Tells this screen how a paste it asked for is going.
+    */
+    virtual void file_paste_status(const FilePasteStatus& status) { (void) status; }
+
     //@}
     //! @name accessors
     //@{
@@ -60,6 +74,13 @@ public:
     Return if this proxy is for client or primary.
     */
     virtual bool isPrimary() const { return false; }
+
+    //! Test for file paste support
+    /*!
+    Return true if this screen can send and paste files copied on other
+    screens, i.e. it speaks protocol 1.7 or is the primary.
+    */
+    virtual bool supports_file_paste() const { return false; }
 
     //@}
 

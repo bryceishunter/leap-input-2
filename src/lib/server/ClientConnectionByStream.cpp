@@ -18,6 +18,7 @@
 #include "base/Log.h"
 #include "inputleap/ClipboardChunk.h"
 #include "inputleap/FileChunk.h"
+#include "inputleap/FileClip.h"
 #include "inputleap/ProtocolUtil.h"
 #include "inputleap/protocol_types.h"
 #include "io/IStream.h"
@@ -141,6 +142,18 @@ void ClientConnectionByStream::send_file_chunk_1_6(const FileChunk& chunk)
 void ClientConnectionByStream::send_grab_clipboard(ClipboardID id)
 {
     ProtocolUtil::writef(stream_.get(), kMsgCClipboard, id, 0);
+}
+
+void ClientConnectionByStream::send_file_send_1_7(const FilePasteRequest& request)
+{
+    ProtocolUtil::writef(stream_.get(), kMsgCFileSend, &request.request, &request.file_id,
+                         &request.address);
+}
+
+void ClientConnectionByStream::send_file_status_1_7(const FilePasteStatus& status)
+{
+    ProtocolUtil::writef(stream_.get(), kMsgDFileStatus, &status.request,
+                         static_cast<std::uint32_t>(status.state), &status.detail);
 }
 
 void ClientConnectionByStream::flush()

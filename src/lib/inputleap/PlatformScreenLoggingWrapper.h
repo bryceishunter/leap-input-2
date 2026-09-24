@@ -41,6 +41,8 @@ public:
     void setOptions(const OptionsList& options) override;
     void setSequenceNumber(std::uint32_t) override;
     void setDraggingStarted(bool started) override;
+    bool send_files(const FilePasteRequest& request) override;
+    void file_paste_status(const FilePasteStatus& status) override;
     bool isPrimary() const override;
 
     std::string& getDraggingFilename() override;

@@ -283,6 +283,16 @@ enum class EventType : std::uint32_t {
     /// This event is a keepalive event.
     FILE_KEEPALIVE,
 
+    /** This event is sent when the user pastes files that were copied on another screen.
+        The data is a FilePasteRequest.
+    */
+    FILE_PASTE_REQUESTED,
+
+    /** This event is sent as files for a paste on another screen are sent, or fail to be.
+        The data is a FilePasteStatus.
+    */
+    FILE_PASTE_STATUS,
+
     /// The total number of known event types.
     EVENT_COUNT,
 };

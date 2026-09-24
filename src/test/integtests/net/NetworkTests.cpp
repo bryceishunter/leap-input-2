@@ -30,6 +30,7 @@
 #include "server/ClientProxy.h"
 #include "client/Client.h"
 #include "inputleap/FileChunk.h"
+#include "inputleap/FileClip.h"
 #include "inputleap/StreamChunker.h"
 #include "net/SocketMultiplexer.h"
 #include "net/NetworkAddress.h"
@@ -344,6 +345,125 @@ TEST_F(NetworkTests, sendToServer_mockFile)
     m_events.remove_handler(EventType::CLIENT_LISTENER_CONNECTED, &listener);
     m_events.remove_handler(EventType::FILE_RECEIVE_COMPLETED, &server);
     m_events.cleanupQuitTimeout();
+}
+
+TEST_F(NetworkTests, filePaste_filesCopiedOnClientArePastedOnServer)
+{
+    NetworkAddress serverAddress(TEST_HOST, TEST_PORT);
+    serverAddress.resolve();
+
+    // server
+    SocketMultiplexer serverSocketMultiplexer;
+    ClientListener listener(serverAddress,
+                            std::make_unique<TCPSocketFactory>(&m_events, &serverSocketMultiplexer),
+                            &m_events,
+                            ConnectionSecurityLevel::PLAINTEXT);
+    NiceMock<MockScreen> serverScreen;
+    NiceMock<MockPrimaryClient> primaryClient;
+    NiceMock<MockConfig> serverConfig;
+    NiceMock<MockInputFilter> serverInputFilter;
+
+    ON_CALL(serverConfig, isScreen(_)).WillByDefault(Return(true));
+    ON_CALL(serverConfig, getInputFilter()).WillByDefault(Return(&serverInputFilter));
+
+    ServerArgs serverArgs;
+    Server server(serverConfig, &primaryClient, &serverScreen, &m_events, serverArgs);
+    server.m_mock = true;
+    listener.setServer(&server);
+
+    // client
+    NiceMock<MockScreen> clientScreen;
+    SocketMultiplexer clientSocketMultiplexer;
+    TCPSocketFactory* clientSocketFactory = new TCPSocketFactory(&m_events, &clientSocketMultiplexer);
+
+    ON_CALL(clientScreen, getShape(_, _, _, _)).WillByDefault(Invoke(getScreenShape));
+    ON_CALL(clientScreen, getCursorPos(_, _)).WillByDefault(Invoke(getCursorPos));
+
+    ClientArgs clientArgs;
+    clientArgs.m_enableCrypto = false;
+    Client client(&m_events, "stub", serverAddress, clientSocketFactory, &clientScreen, clientArgs);
+
+    // the files the user copies on the client
+    FileClip clip;
+    clip.files.push_back({"report.pdf", 1234, 5678});
+    clip.id = FileClip::make_id({"C:\\report.pdf"}, clip.files);
+    ON_CALL(clientScreen, getClipboard(_, _))
+        .WillByDefault(Invoke([&clip](ClipboardID, IClipboard* clipboard) {
+            clipboard->open(0);
+            clipboard->clear();
+            clipboard->add(IClipboard::kFiles, clip.marshall());
+            clipboard->close();
+            return true;
+        }));
+
+    // once connected, the user copies the files on the client, which isn't
+    // the active screen, so it sends them to the server straight away
+    m_events.add_handler(EventType::CLIENT_LISTENER_CONNECTED, &listener,
+                         [&](const auto&)
+    {
+        server.adoptClient(listener.getNextClient());
+        m_events.add_event(EventType::CLIPBOARD_GRABBED, clientScreen.get_event_target(),
+                           create_event_data<IScreen::ClipboardInfo>(
+                               IScreen::ClipboardInfo{kClipboardClipboard, 0}));
+    });
+
+    // when the server has the files on its clipboard, the user pastes them on
+    // the server: once with the id of an earlier copy, then with the right one
+    FilePasteRequest stale{"00000000000000aa", "0000000000000000", "100.81.171.127"};
+    FilePasteRequest paste{"00000000000000bb", clip.id, "100.81.171.127"};
+    ON_CALL(primaryClient, setClipboard(_, _))
+        .WillByDefault(Invoke([&](ClipboardID id, const IClipboard* clipboard) {
+            clipboard->open(0);
+            bool has_files = clipboard->has(IClipboard::kFiles);
+            clipboard->close();
+            if (id == kClipboardClipboard && has_files) {
+                for (const auto& request : {stale, paste}) {
+                    m_events.add_event(EventType::FILE_PASTE_REQUESTED,
+                                       primaryClient.get_event_target(),
+                                       create_event_data<FilePasteRequest>(request));
+                }
+            }
+        }));
+
+    // the client is asked to send the files, and reports back
+    EXPECT_CALL(clientScreen, send_files(_))
+        .WillOnce(Invoke([&](const FilePasteRequest& request) {
+            EXPECT_EQ(paste.request, request.request);
+            EXPECT_EQ(paste.file_id, request.file_id);
+            EXPECT_EQ(paste.address, request.address);
+            for (FilePasteState state : {FilePasteState::SENDING, FilePasteState::SENT}) {
+                m_events.add_event(EventType::FILE_PASTE_STATUS, clientScreen.get_event_target(),
+                                   create_event_data<FilePasteStatus>(
+                                       FilePasteStatus{request.request, state, "detail"}));
+            }
+        }));
+
+    // and the server's screen hears how each paste went
+    std::vector<FilePasteStatus> statuses;
+    EXPECT_CALL(primaryClient, file_paste_status(_))
+        .WillRepeatedly(Invoke([&](const FilePasteStatus& status) {
+            statuses.push_back(status);
+            if (status.state == FilePasteState::SENT) {
+                m_events.raiseQuitEvent();
+            }
+        }));
+
+    client.connect();
+
+    m_events.initQuitTimeout(10);
+    m_events.loop();
+    m_events.remove_handler(EventType::CLIENT_LISTENER_CONNECTED, &listener);
+    m_events.cleanupQuitTimeout();
+
+    ASSERT_EQ(3u, statuses.size());
+    EXPECT_EQ(stale.request, statuses[0].request);
+    EXPECT_EQ(FilePasteState::FAILED, statuses[0].state);
+    EXPECT_EQ("the files are no longer on the clipboard", statuses[0].detail);
+    EXPECT_EQ(paste.request, statuses[1].request);
+    EXPECT_EQ(FilePasteState::SENDING, statuses[1].state);
+    EXPECT_EQ("detail", statuses[1].detail);
+    EXPECT_EQ(paste.request, statuses[2].request);
+    EXPECT_EQ(FilePasteState::SENT, statuses[2].state);
 }
 
 void NetworkTests::sendToClient_mockData_handle_client_connected(const Event&,

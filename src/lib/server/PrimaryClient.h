@@ -152,6 +152,9 @@ public:
     }
 
     bool isPrimary() const override{ return true; }
+    bool supports_file_paste() const override { return true; }
+    void send_files(const FilePasteRequest& request) override;
+    void file_paste_status(const FilePasteStatus& status) override;
 private:
     inputleap::Screen* m_screen;
     bool m_clipboardDirty[kClipboardEnd];

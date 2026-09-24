@@ -17,6 +17,7 @@
  */
 
 #include "inputleap/Screen.h"
+#include "inputleap/FileClip.h"
 #include "inputleap/IPlatformScreen.h"
 #include "inputleap/protocol_types.h"
 #include "base/Log.h"
@@ -165,6 +166,21 @@ void
 Screen::grabClipboard(ClipboardID id)
 {
     m_screen->setClipboard(id, nullptr);
+}
+
+void Screen::send_files(const FilePasteRequest& request)
+{
+    if (!m_screen->send_files(request)) {
+        FilePasteStatus status{request.request, FilePasteState::FAILED,
+                               "this screen can't send files"};
+        m_events->add_event(EventType::FILE_PASTE_STATUS, get_event_target(),
+                            create_event_data<FilePasteStatus>(status));
+    }
+}
+
+void Screen::file_paste_status(const FilePasteStatus& status)
+{
+    m_screen->file_paste_status(status);
 }
 
 void

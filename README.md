@@ -26,6 +26,8 @@ No binary releases yet; build from source.
 - Windows: the cursor stays hidden on a client the mouse has left
 - Windows: suspend and resume no longer leave a dead server, a client that was
   never told to disconnect, or stale input hooks
+- Windows: files copied on one screen can be pasted on another, sent with
+  Taildrop (see below)
 - Windows: the background service now recognises its own processes, so a stale
   copy can't compete with the one it starts
 
@@ -93,6 +95,21 @@ each machine's SHA-256 fingerprint in the other's `SSL/Fingerprints/` file as
 On a network that is already private and authenticated, `--disable-crypto` on
 both sides skips all of that. Note that this also removes authentication:
 anything that can reach port 24800 can then connect and receive your keystrokes.
+
+## Copy and paste files
+
+On Windows, files copied in Explorer on one screen can be pasted on another.
+Copy them as usual, move to the other screen and paste. Nothing is sent until
+you paste: then the screen that copied the files sends them with
+[Taildrop](https://tailscale.com/kb/1106/taildrop), and the application you
+paste into waits until they have arrived. Copying anything else first replaces
+them, like any other clipboard content.
+
+Both machines need Tailscale on the same tailnet, with Taildrop allowed, and
+this version of Leapdesk; an older one still connects but can't take part.
+Folders can't be copied this way yet. The files pass through your Downloads
+folder, where Taildrop saves them, and are kept in
+`%LOCALAPPDATA%\Leapdesk\Pasted` until the clipboard changes.
 
 ## Contributing
 

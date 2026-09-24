@@ -23,6 +23,7 @@
 #include "server/PrimaryClient.h"
 #include "server/ClientListener.h"
 #include "inputleap/FileChunk.h"
+#include "inputleap/FileClip.h"
 #include "inputleap/IPlatformScreen.h"
 #include "inputleap/DropHelper.h"
 #include "inputleap/option_types.h"
@@ -145,6 +146,14 @@ Server::Server(
     m_events->add_handler(EventType::PRIMARY_SCREEN_SAVER_DEACTIVATED,
                           m_primaryClient->get_event_target(),
                           [this](const auto& e){ handle_screensaver_deactivated_event(); });
+    m_events->add_handler(EventType::FILE_PASTE_REQUESTED, m_primaryClient->get_event_target(),
+                          [this](const auto& e) {
+        file_paste_requested(m_primaryClient, e.template get_data_as<FilePasteRequest>());
+    });
+    m_events->add_handler(EventType::FILE_PASTE_STATUS, m_primaryClient->get_event_target(),
+                          [this](const auto& e) {
+        file_paste_status(m_primaryClient, e.template get_data_as<FilePasteStatus>());
+    });
     m_events->add_handler(EventType::SERVER_SWITCH_TO_SCREEN, &input_filter_,
                           [this](const auto& e){ handle_switch_to_screen_event(e); });
     m_events->add_handler(EventType::SERVER_TOGGLE_SCREEN, &input_filter_,
@@ -202,6 +211,8 @@ Server::~Server()
     m_events->remove_handler(EventType::PRIMARY_SCREEN_WHEEL, m_primaryClient->get_event_target());
     m_events->remove_handler(EventType::PRIMARY_SCREEN_SAVER_ACTIVATED, m_primaryClient->get_event_target());
     m_events->remove_handler(EventType::PRIMARY_SCREEN_SAVER_DEACTIVATED, m_primaryClient->get_event_target());
+    m_events->remove_handler(EventType::FILE_PASTE_REQUESTED, m_primaryClient->get_event_target());
+    m_events->remove_handler(EventType::FILE_PASTE_STATUS, m_primaryClient->get_event_target());
     m_events->remove_handler(EventType::PRIMARY_SCREEN_FAKE_INPUT_BEGIN, &input_filter_);
     m_events->remove_handler(EventType::PRIMARY_SCREEN_FAKE_INPUT_END, &input_filter_);
     m_events->remove_handler(EventType::TIMER, this);
@@ -2054,8 +2065,11 @@ Server::removeClient(BaseClientProxy* client)
     m_events->remove_handler(EventType::CLIPBOARD_CHANGED, client->get_event_target());
 
 	// remove from list
-	m_clients.erase(getName(client));
+	std::string name = getName(client);
+	m_clients.erase(name);
 	m_clientSet.erase(i);
+
+	end_file_pastes(name);
 
 	return true;
 }
@@ -2245,6 +2259,127 @@ void Server::dragInfoReceived(std::uint32_t fileNum, std::string content)
 	DragInformation::parseDragInfo(m_fakeDragFileList, fileNum, content);
 
 	m_screen->startDraggingFiles(m_fakeDragFileList);
+}
+
+void Server::file_paste_requested(BaseClientProxy* requester, const FilePasteRequest& request)
+{
+    auto fail = [&](const char* reason) {
+        LOG_NOTE("can't paste files on \"%s\": %s", getName(requester).c_str(), reason);
+        requester->file_paste_status(FilePasteStatus{request.request, FilePasteState::FAILED,
+                                                     reason});
+    };
+
+    // a client that has connected but isn't in the layout yet.  answer it
+    // anyway, so that it doesn't wait for files that won't come
+    if (m_clientSet.count(requester) == 0) {
+        fail("this screen isn't connected yet");
+        return;
+    }
+
+    // the request and the address end up in file names and on a command line
+    if (!is_valid_paste_request(request.request) || !is_valid_paste_address(request.address)) {
+        fail("the paste request is malformed");
+        return;
+    }
+    if (m_file_pastes.count(request.request) != 0) {
+        fail("a paste with the same id is already in progress");
+        return;
+    }
+
+    FileClip clip;
+    if (!m_enableClipboard || !get_file_clip(clip) || clip.id != request.file_id) {
+        fail("the files are no longer on the clipboard");
+        return;
+    }
+
+    auto owner = m_clients.find(m_clipboards[kClipboardClipboard].m_clipboardOwner);
+    if (owner == m_clients.end()) {
+        fail("the screen that copied the files is not connected");
+        return;
+    }
+    BaseClientProxy* source = owner->second;
+    if (source == requester) {
+        fail("the files were copied on this screen");
+        return;
+    }
+    if (!source->supports_file_paste()) {
+        fail("the screen that copied the files runs a version that can't send them");
+        return;
+    }
+
+    LOG_INFO("screen \"%s\" pasted %zu file(s) copied on \"%s\", request %s",
+             getName(requester).c_str(), clip.files.size(), getName(source).c_str(),
+             request.request.c_str());
+    m_file_pastes[request.request] = FilePaste{getName(requester), getName(source)};
+    source->send_files(request);
+}
+
+void Server::file_paste_status(BaseClientProxy* sender, const FilePasteStatus& status)
+{
+    // only the screen asked to send the files may report on them
+    auto paste = m_file_pastes.find(status.request);
+    if (paste == m_file_pastes.end() || paste->second.source != getName(sender)) {
+        LOG_DEBUG("ignored file paste status for unknown request %s from \"%s\"",
+                  status.request.c_str(), getName(sender).c_str());
+        return;
+    }
+
+    std::string target = paste->second.target;
+    switch (status.state) {
+    case FilePasteState::SENDING:
+        LOG_INFO("\"%s\" is sending files for paste %s: %s", getName(sender).c_str(),
+                 status.request.c_str(), status.detail.c_str());
+        break;
+    case FilePasteState::SENT:
+        LOG_INFO("\"%s\" sent the files for paste %s", getName(sender).c_str(),
+                 status.request.c_str());
+        m_file_pastes.erase(paste);
+        break;
+    case FilePasteState::FAILED:
+        LOG_NOTE("\"%s\" couldn't send the files for paste %s: %s", getName(sender).c_str(),
+                 status.request.c_str(), status.detail.c_str());
+        m_file_pastes.erase(paste);
+        break;
+    }
+
+    auto client = m_clients.find(target);
+    if (client != m_clients.end()) {
+        client->second->file_paste_status(status);
+    }
+}
+
+bool Server::get_file_clip(FileClip& clip)
+{
+    Clipboard& clipboard = m_clipboards[kClipboardClipboard].m_clipboard;
+    std::string data;
+    if (clipboard.open(0)) {
+        if (clipboard.has(IClipboard::kFiles)) {
+            data = clipboard.get(IClipboard::kFiles);
+        }
+        clipboard.close();
+    }
+    return !data.empty() && FileClip::unmarshall(data, clip);
+}
+
+void Server::end_file_pastes(const std::string& name)
+{
+    for (auto paste = m_file_pastes.begin(); paste != m_file_pastes.end();) {
+        if (paste->second.source == name) {
+            auto target = m_clients.find(paste->second.target);
+            if (target != m_clients.end()) {
+                target->second->file_paste_status(
+                    FilePasteStatus{paste->first, FilePasteState::FAILED,
+                                    "the screen that copied the files disconnected"});
+            }
+            paste = m_file_pastes.erase(paste);
+        }
+        else if (paste->second.target == name) {
+            paste = m_file_pastes.erase(paste);
+        }
+        else {
+            ++paste;
+        }
+    }
 }
 
 } // namespace inputleap

@@ -154,6 +154,19 @@ public:
     //! Received dragging information from client
     void dragInfoReceived(std::uint32_t fileNum, std::string content);
 
+    //! A screen pasted files copied on another screen
+    /*!
+    Passes \c request on to the screen that owns the clipboard, if the
+    clipboard still holds the files it names, or tells \c requester why not.
+    */
+    void file_paste_requested(BaseClientProxy* requester, const FilePasteRequest& request);
+
+    //! The screen sending files for a paste reports progress
+    /*!
+    Passes \c status on to the screen that pasted.
+    */
+    void file_paste_status(BaseClientProxy* sender, const FilePasteStatus& status);
+
     //! Store ClientListener pointer
     void setListener(ClientListener* p) { m_clientListener = p; }
 
@@ -341,6 +354,13 @@ private:
     // remove client from list and detach event handlers for client
     bool removeClient(BaseClientProxy*);
 
+    // the files on the shared clipboard, if it holds any
+    bool get_file_clip(FileClip& clip);
+
+    // forget the file pastes of screen \p name, which has gone.  pastes
+    // waiting for its files fail
+    void end_file_pastes(const std::string& name);
+
     // close a client
     void closeClient(BaseClientProxy*, const char* msg);
 
@@ -423,6 +443,14 @@ private:
 
     // clipboard cache
     ClipboardInfo m_clipboards[kClipboardEnd];
+
+    // file pastes that are waiting for their files, by request.  the
+    // screens are kept by name, since either may disconnect meanwhile
+    struct FilePaste {
+        std::string target;     // the screen that pasted
+        std::string source;     // the screen sending the files
+    };
+    std::map<std::string, FilePaste> m_file_pastes;
 
     // state saved when screen saver activates
     BaseClientProxy* m_activeSaver;

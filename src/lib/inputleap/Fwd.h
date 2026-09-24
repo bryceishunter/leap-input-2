@@ -51,6 +51,11 @@ class DragInformation;
 // FileChunk.h
 class FileChunk;
 
+// FileClip.h
+struct FileClip;
+struct FilePasteRequest;
+struct FilePasteStatus;
+
 // IApp.h
 class IApp;
 

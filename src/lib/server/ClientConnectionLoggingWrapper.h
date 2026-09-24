@@ -58,6 +58,8 @@ public:
     void send_clipboard_chunk_1_6(const ClipboardChunk& chunk) override;
     void send_file_chunk_1_6(const FileChunk& chunk) override;
     void send_grab_clipboard(ClipboardID id) override;
+    void send_file_send_1_7(const FilePasteRequest& request) override;
+    void send_file_status_1_7(const FilePasteStatus& status) override;
 
     void flush() override;
     void close() override;

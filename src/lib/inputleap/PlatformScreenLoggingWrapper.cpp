@@ -16,6 +16,7 @@
 
 #include "PlatformScreenLoggingWrapper.h"
 #include "base/Log.h"
+#include "inputleap/FileClip.h"
 
 namespace inputleap {
 
@@ -108,6 +109,20 @@ void PlatformScreenLoggingWrapper::setDraggingStarted(bool started)
 {
     LOG_DEBUG1("PlatformScreen::setDraggingStarted() started=%d", started);
     screen_->setDraggingStarted(started);
+}
+
+bool PlatformScreenLoggingWrapper::send_files(const FilePasteRequest& request)
+{
+    LOG_DEBUG1("PlatformScreen::send_files() request=%s file_id=%s address=%s",
+               request.request.c_str(), request.file_id.c_str(), request.address.c_str());
+    return screen_->send_files(request);
+}
+
+void PlatformScreenLoggingWrapper::file_paste_status(const FilePasteStatus& status)
+{
+    LOG_DEBUG1("PlatformScreen::file_paste_status() request=%s state=%d detail=%s",
+               status.request.c_str(), static_cast<int>(status.state), status.detail.c_str());
+    screen_->file_paste_status(status);
 }
 
 bool PlatformScreenLoggingWrapper::isPrimary() const

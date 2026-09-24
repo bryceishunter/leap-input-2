@@ -61,6 +61,8 @@ public:
     virtual void send_clipboard_chunk_1_6(const ClipboardChunk& chunk) = 0;
     virtual void send_file_chunk_1_6(const FileChunk& chunk) = 0;
     virtual void send_grab_clipboard(ClipboardID id) = 0;
+    virtual void send_file_send_1_7(const FilePasteRequest& request) = 0;
+    virtual void send_file_status_1_7(const FilePasteStatus& status) = 0;
 
     virtual void flush() = 0;
     virtual void close() = 0;

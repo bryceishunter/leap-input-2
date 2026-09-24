@@ -25,6 +25,7 @@
 #include "inputleap/DragInformation.h"
 #include "platform/synwinhk.h"
 #include <map>
+#include <memory>
 #include <string>
 
 #define WIN32_LEAN_AND_MEAN
@@ -37,6 +38,8 @@ class MSWindowsKeyState;
 class MSWindowsScreenSaver;
 class Thread;
 class MSWindowsDropTarget;
+class MSWindowsTaildrop;
+class MSWindowsFilePaste;
 
 //! Implementation of IPlatformScreen for Microsoft Windows
 class MSWindowsScreen : public PlatformScreen {
@@ -112,6 +115,8 @@ public:
     virtual void leave();
     virtual bool setClipboard(ClipboardID, const IClipboard*);
     virtual void checkClipboards();
+    bool send_files(const FilePasteRequest& request) override;
+    void file_paste_status(const FilePasteStatus& status) override;
     virtual void openScreensaver(bool notify);
     virtual void closeScreensaver();
     virtual void screensaver(bool activate);
@@ -341,6 +346,11 @@ private:
     const int m_dropWindowSize;
 
     Thread* m_sendDragThread;
+
+    // sends copied files when another screen pastes them
+    std::unique_ptr<MSWindowsTaildrop> m_taildrop;
+    // offers files copied on another screen, and fetches them when pasted
+    std::unique_ptr<MSWindowsFilePaste> m_file_paste;
 
     PrimaryKeyDownList m_primaryKeyDownList;
 };

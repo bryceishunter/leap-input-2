@@ -105,6 +105,20 @@ public:
     */
     void grabClipboard(ClipboardID);
 
+    //! Send copied files
+    /*!
+    Sends the files on this screen's clipboard for a paste on another
+    screen, if they are still the ones \c request names.  Progress, or
+    why it failed, arrives as FILE_PASTE_STATUS events.
+    */
+    virtual void send_files(const FilePasteRequest& request);
+
+    //! Notify of file paste progress
+    /*!
+    Reports how a paste this screen asked for is going.
+    */
+    virtual void file_paste_status(const FilePasteStatus& status);
+
     //! Activate/deactivate screen saver
     /*!
     Forcibly activates the screen saver if \c activate is true otherwise

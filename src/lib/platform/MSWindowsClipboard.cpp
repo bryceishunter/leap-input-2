@@ -22,6 +22,7 @@
 #include "platform/MSWindowsClipboardUTF16Converter.h"
 #include "platform/MSWindowsClipboardBitmapConverter.h"
 #include "platform/MSWindowsClipboardHTMLConverter.h"
+#include "platform/MSWindowsClipboardFilesConverter.h"
 #include "platform/MSWindowsClipboardFacade.h"
 #include "arch/win32/ArchMiscWindows.h"
 #include "base/Log.h"
@@ -40,6 +41,7 @@ MSWindowsClipboard::MSWindowsClipboard(HWND window) :
     m_converters.push_back(new MSWindowsClipboardUTF16Converter);
     m_converters.push_back(new MSWindowsClipboardBitmapConverter);
     m_converters.push_back(new MSWindowsClipboardHTMLConverter);
+    m_converters.push_back(new MSWindowsClipboardFilesConverter);
 }
 
 MSWindowsClipboard::~MSWindowsClipboard()
@@ -120,13 +122,18 @@ MSWindowsClipboard::open(Time time) const
 {
     LOG_DEBUG("open clipboard");
 
-    if (!OpenClipboard(m_window)) {
-        // unable to cause this in integ tests; but this can happen!
-        // * http://symless.com/pm/issues/86
-        // * http://symless.com/pm/issues/1256
-        // logging improved to see if we can catch more info next time.
-        LOG_WARN("failed to open clipboard: %d", GetLastError());
-        return false;
+    // another program, or our own file paste thread, may have it open for a
+    // moment, so try a few times
+    for (int attempt = 1; !OpenClipboard(m_window); ++attempt) {
+        if (attempt == 5) {
+            // unable to cause this in integ tests; but this can happen!
+            // * http://symless.com/pm/issues/86
+            // * http://symless.com/pm/issues/1256
+            // logging improved to see if we can catch more info next time.
+            LOG_WARN("failed to open clipboard: %d", GetLastError());
+            return false;
+        }
+        Sleep(10);
     }
 
     m_time = time;
@@ -150,6 +157,12 @@ MSWindowsClipboard::getTime() const
 bool
 MSWindowsClipboard::has(EFormat format) const
 {
+    // files we offer from another screen are only a promise: reading them
+    // would fetch them
+    if (format == kFiles && is_owned_by_us()) {
+        return false;
+    }
+
     for (auto index = m_converters.begin(); index != m_converters.end(); ++index) {
         IMSWindowsClipboardConverter* converter = *index;
         if (converter->getFormat() == format) {

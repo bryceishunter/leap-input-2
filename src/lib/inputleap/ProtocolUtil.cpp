@@ -327,11 +327,13 @@ std::uint32_t ProtocolUtil::getLength(const char* fmt, va_list args)
                 }
                 break;
 
-            case 's':
+            case 's': {
+                // one argument, unlike %S.  writef() accepts a null string
                 assert(len == 0);
-                len = 4 + static_cast<std::uint32_t>((va_arg(args, std::string*))->size());
-                (void)va_arg(args, std::uint8_t*);
+                const std::string* src = va_arg(args, std::string*);
+                len = 4 + (src != nullptr ? static_cast<std::uint32_t>(src->size()) : 0);
                 break;
+            }
 
             case 'S':
                 assert(len == 0);

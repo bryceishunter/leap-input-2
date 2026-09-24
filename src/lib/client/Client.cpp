@@ -21,6 +21,7 @@
 #include "client/ServerProxy.h"
 #include "inputleap/Screen.h"
 #include "inputleap/FileChunk.h"
+#include "inputleap/FileClip.h"
 #include "inputleap/DropHelper.h"
 #include "inputleap/PacketStreamFilter.h"
 #include "inputleap/ProtocolUtil.h"
@@ -61,6 +62,7 @@ Client::Client(IEventQueue* events, const std::string& name, const NetworkAddres
     m_stream(nullptr),
     m_timer(nullptr),
     m_server(nullptr),
+    m_protocol_minor(kProtocolMinorVersion),
     m_ready(false),
     m_active(false),
     m_suspended(false),
@@ -481,6 +483,10 @@ Client::setupScreen()
                           [this](const auto& e){ handle_shape_changed(); });
     m_events->add_handler(EventType::CLIPBOARD_GRABBED, get_event_target(),
                           [this](const auto& e){ handle_clipboard_grabbed(e); });
+    m_events->add_handler(EventType::FILE_PASTE_REQUESTED, get_event_target(),
+                          [this](const auto& e){ handle_file_paste_requested(e); });
+    m_events->add_handler(EventType::FILE_PASTE_STATUS, get_event_target(),
+                          [this](const auto& e){ handle_file_paste_status(e); });
 }
 
 void
@@ -527,6 +533,8 @@ Client::cleanupScreen()
         }
         m_events->remove_handler(EventType::SCREEN_SHAPE_CHANGED, get_event_target());
         m_events->remove_handler(EventType::CLIPBOARD_GRABBED, get_event_target());
+        m_events->remove_handler(EventType::FILE_PASTE_REQUESTED, get_event_target());
+        m_events->remove_handler(EventType::FILE_PASTE_STATUS, get_event_target());
         delete m_server;
         m_server = nullptr;
     }
@@ -632,6 +640,35 @@ void Client::handle_clipboard_grabbed(const Event& event)
     }
 }
 
+void Client::handle_file_paste_requested(const Event& event)
+{
+    const auto& request = event.get_data_as<FilePasteRequest>();
+    if (m_protocol_minor < 7) {
+        m_screen->file_paste_status(FilePasteStatus{request.request, FilePasteState::FAILED,
+                                    "the server runs a version that can't paste files"});
+        return;
+    }
+    m_server->request_file_paste(request);
+}
+
+void Client::handle_file_paste_status(const Event& event)
+{
+    // a 1.6 server never asks for files, so there is nothing to report to it
+    if (m_protocol_minor >= 7) {
+        m_server->send_file_paste_status(event.get_data_as<FilePasteStatus>());
+    }
+}
+
+void Client::send_files(const FilePasteRequest& request)
+{
+    m_screen->send_files(request);
+}
+
+void Client::file_paste_status(const FilePasteStatus& status)
+{
+    m_screen->file_paste_status(status);
+}
+
 void Client::handle_hello()
 {
     std::int16_t major, minor;
@@ -642,21 +679,24 @@ void Client::handle_hello()
         return;
     }
 
-    // check versions
+    // check versions.  an older server is fine as long as we still speak
+    // its version; we then leave out what it doesn't know
     LOG_DEBUG1("got hello version %d.%d", major, minor);
     if (major < kProtocolMajorVersion ||
-        (major == kProtocolMajorVersion && minor < kProtocolMinorVersion)) {
+        (major == kProtocolMajorVersion && minor < kProtocolMinimumMinorVersion)) {
         sendConnectionFailedEvent(XIncompatibleClient(major, minor).what());
         cleanupTimer();
         cleanupConnection();
         return;
     }
+    m_protocol_minor = (major == kProtocolMajorVersion && minor < kProtocolMinorVersion) ?
+                       minor : kProtocolMinorVersion;
 
     // say hello back
-    LOG_DEBUG1("say hello version %d.%d", kProtocolMajorVersion, kProtocolMinorVersion);
+    LOG_DEBUG1("say hello version %d.%d", kProtocolMajorVersion, m_protocol_minor);
     ProtocolUtil::writef(m_stream, kMsgHelloBack,
                             kProtocolMajorVersion,
-                            kProtocolMinorVersion, &m_name);
+                            m_protocol_minor, &m_name);
 
     // now connected but waiting to complete handshake
     setupScreen();

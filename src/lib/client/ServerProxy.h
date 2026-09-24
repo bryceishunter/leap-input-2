@@ -60,6 +60,10 @@ public:
     // sending dragging information to server
     void sendDragInfo(std::uint32_t fileCount, const char* info, size_t size);
 
+    // file paste, protocol 1.7
+    void request_file_paste(const FilePasteRequest& request);
+    void send_file_paste_status(const FilePasteStatus& status);
+
 #ifdef INPUTLEAP_TEST_ENV
     void handleDataForTest() { handleData(Event(), nullptr); }
 #endif
@@ -106,6 +110,8 @@ private:
     void infoAcknowledgment();
     void fileChunkReceived();
     void dragInfoReceived();
+    bool file_send();
+    bool file_status();
     void handle_clipboard_sending_event(const Event&);
 
 private:
