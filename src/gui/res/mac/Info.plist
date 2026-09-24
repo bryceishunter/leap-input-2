@@ -5,18 +5,18 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>English</string>
     <key>CFBundleDisplayName</key>
-    <string>InputLeap</string>
+    <string>Leapdesk</string>
     <key>CFBundleExecutable</key>
-    <string>InputLeap</string>
+    <string>leapdesk</string>
     <key>CFBundleIconFile</key>
-    <string>InputLeap.icns</string>
+    <string>Leapdesk.icns</string>
     <key>CFBundleIdentifier</key>
-    <string>inputleap</string>
+    <string>leapdesk</string>
     <!-- TODO: Fix this in v2.0 //-->
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>InputLeap</string>
+    <string>Leapdesk</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

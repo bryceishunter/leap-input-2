@@ -82,18 +82,18 @@ const char* icon_file_for_connection_state(AppConnectionState state)
 #if defined(Q_OS_MAC)
     switch (state) {
         default:
-        case AppConnectionState::DISCONNECTED: return ":/res/icons/128x128/input-leap-disconnected-mask.png";
-        case AppConnectionState::CONNECTING:   return ":/res/icons/128x128/input-leap-disconnected-mask.png";
-        case AppConnectionState::CONNECTED:    return ":/res/icons/128x128/input-leap-connected-mask.png";
-        case AppConnectionState::TRANSFERRING: return ":/res/icons/128x128/input-leap-transfering-mask.png";
+        case AppConnectionState::DISCONNECTED: return ":/res/icons/128x128/leapdesk-disconnected-mask.png";
+        case AppConnectionState::CONNECTING:   return ":/res/icons/128x128/leapdesk-disconnected-mask.png";
+        case AppConnectionState::CONNECTED:    return ":/res/icons/128x128/leapdesk-connected-mask.png";
+        case AppConnectionState::TRANSFERRING: return ":/res/icons/128x128/leapdesk-transferring-mask.png";
     }
 #else
     switch (state) {
         default:
-        case AppConnectionState::DISCONNECTED: return ":/res/icons/128x128/input-leap-disconnected.png";
-        case AppConnectionState::CONNECTING:   return ":/res/icons/128x128/input-leap-disconnected.png";
-        case AppConnectionState::CONNECTED:    return ":/res/icons/128x128/input-leap-connected.png";
-        case AppConnectionState::TRANSFERRING: return ":/res/icons/128x128/input-leap-transfering.png";
+        case AppConnectionState::DISCONNECTED: return ":/res/icons/128x128/leapdesk-disconnected.png";
+        case AppConnectionState::CONNECTING:   return ":/res/icons/128x128/leapdesk-disconnected.png";
+        case AppConnectionState::CONNECTED:    return ":/res/icons/128x128/leapdesk-connected.png";
+        case AppConnectionState::TRANSFERRING: return ":/res/icons/128x128/leapdesk-transferring.png";
     }
 #endif
 }
@@ -102,14 +102,14 @@ const char* icon_name_for_connection_state(AppConnectionState state)
 {
     switch (state) {
         default:
-        case AppConnectionState::DISCONNECTED: return "input-leap-disconnected";
-        case AppConnectionState::CONNECTING: return "input-leap-disconnected";
-        case AppConnectionState::CONNECTED: return "input-leap-connected";
-        case AppConnectionState::TRANSFERRING: return "input-leap-transfering";
+        case AppConnectionState::DISCONNECTED: return "leapdesk-disconnected";
+        case AppConnectionState::CONNECTING: return "leapdesk-disconnected";
+        case AppConnectionState::CONNECTED: return "leapdesk-connected";
+        case AppConnectionState::TRANSFERRING: return "leapdesk-transferring";
     }
 }
 
-static const char* APP_LARGE_ICON = ":/res/icons/256x256/input-leap.png";
+static const char* APP_LARGE_ICON = ":/res/icons/256x256/leapdesk.png";
 
 } // namespace
 
@@ -563,7 +563,7 @@ void MainWindow::checkFingerprint(const QString& line)
     }
 
     // We compare only SHA256 fingerprints, but show both SHA1 and SHA256 so that the users can
-    // still verify fingerprints on old Leapdesk KVM servers. This way the only time when we are
+    // still verify fingerprints on old Input Leap servers. This way the only time when we are
     // exposed to SHA1 vulnerabilities is when the user is reconnecting again.
     inputleap::FingerprintDatabase db;
     db.read(db_path);
@@ -1109,7 +1109,7 @@ void MainWindow::updateZeroconfService()
 void MainWindow::serverDetected(const QString name)
 {
     if (ui_->m_pComboServerList->findText(name) == -1) {
-        // Note: the first added item triggers startInputLeap
+        // Note: the first added item triggers restart_cmd_app
         ui_->m_pComboServerList->addItem(name);
     }
 

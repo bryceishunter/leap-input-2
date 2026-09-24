@@ -1,10 +1,10 @@
 <RCC>
     <qresource prefix="/res">
-        <file>icons/128x128/input-leap-connected.png</file>
-        <file>icons/128x128/input-leap-disconnected.png</file>
+        <file>icons/128x128/leapdesk-connected.png</file>
+        <file>icons/128x128/leapdesk-disconnected.png</file>
         <file>icons/64x64/video-display.png</file>
         <file>icons/64x64/user-trash.png</file>
-        <file>icons/256x256/input-leap.png</file>
+        <file>icons/256x256/leapdesk.png</file>
         <file>image/about.png</file>
         <file>lang/gui_ar.qm</file>
         <file>lang/gui_bg-BG.qm</file>
@@ -51,9 +51,9 @@
         <file>lang/Languages.xml</file>
         <file>image/spinning-wheel.gif</file>
         <file>icons/64x64/padlock.png</file>
-        <file>icons/128x128/input-leap-transfering.png</file>
-        <file>icons/128x128/input-leap-connected-mask.png</file>
-        <file>icons/128x128/input-leap-disconnected-mask.png</file>
-        <file>icons/128x128/input-leap-transfering-mask.png</file>
+        <file>icons/128x128/leapdesk-transferring.png</file>
+        <file>icons/128x128/leapdesk-connected-mask.png</file>
+        <file>icons/128x128/leapdesk-disconnected-mask.png</file>
+        <file>icons/128x128/leapdesk-transferring-mask.png</file>
     </qresource>
 </RCC>

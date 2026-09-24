@@ -5,8 +5,8 @@
     <name>AboutDialog</name>
     <message>
         <location filename="res/AboutDialog.ui" line="38"/>
-        <source>About InputLeap</source>
-        <translation>Über InputLeap</translation>
+        <source>About Leapdesk KVM</source>
+        <translation>Über Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="res/AboutDialog.ui" line="53"/>
@@ -14,9 +14,9 @@
 Keyboard and mouse sharing application. Cross platform and open source.&lt;br /&gt;&lt;br /&gt;
 Copyright © 2012-2016 Symless Ltd.&lt;br /&gt;
 Copyright © 2002-2012 Chris Schoeneman, Nick Bolton, Volker Lanz.&lt;br /&gt;&lt;br /&gt;
-InputLeap is released under the GNU General Public License (GPLv2).&lt;br /&gt;&lt;br /&gt;
-InputLeap is based on CosmoSynergy by Richard Lee and Adam Feder.&lt;br /&gt;
-The InputLeap GUI is based on QSynergy by Volker Lanz.&lt;br /&gt;&lt;br /&gt;
+Leapdesk KVM is released under the GNU General Public License (GPLv2).&lt;br /&gt;&lt;br /&gt;
+Leapdesk KVM is based on CosmoSynergy by Richard Lee and Adam Feder.&lt;br /&gt;
+The Leapdesk KVM GUI is based on QSynergy by Volker Lanz.&lt;br /&gt;&lt;br /&gt;
 Visit our website for help and info (symless.com).
 &lt;/p&gt;</source>
         <oldsource>&lt;p&gt;
@@ -32,9 +32,9 @@ Visit our website for help and info (symless.com).
 Anwendung zum Teilen von Tastatur und Maus. Betriebssystemübergreifend und Open Source.&lt;br /&gt;&lt;br /&gt;
 Copyright © 2012-2016 Symless Ltd.&lt;br /&gt;
 Copyright © 2002-2012 Chris Schoeneman, Nick Bolton, Volker Lanz.&lt;br /&gt;&lt;br /&gt;
-InputLeap wird herausgegeben unter der GNU General Public License (GPLv2).&lt;br /&gt;&lt;br /&gt;
-InputLeap basiert auf CosmoSynergy von Richard Lee und Adam Feder.&lt;br /&gt;
-Die InputLeap-GUI basiert auf QSynergy von Volker Lanz.&lt;br /&gt;&lt;br /&gt;
+Leapdesk KVM wird herausgegeben unter der GNU General Public License (GPLv2).&lt;br /&gt;&lt;br /&gt;
+Leapdesk KVM basiert auf CosmoSynergy von Richard Lee und Adam Feder.&lt;br /&gt;
+Die Leapdesk-GUI basiert auf QSynergy von Volker Lanz.&lt;br /&gt;&lt;br /&gt;
 Besuchen Sie unsere Website für Hilfe und Info (symless.com).
 &lt;/p&gt;</translation>
     </message>
@@ -212,9 +212,9 @@ Besuchen Sie unsere Website für Hilfe und Info (symless.com).
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="364"/>
-        <source>&lt;p&gt;Your version of InputLeap is out of date. Version &lt;b&gt;%1&lt;/b&gt; is now available to &lt;a href=&quot;%2&quot;&gt;download&lt;/a&gt;.&lt;/p&gt;</source>
+        <source>&lt;p&gt;Your version of Leapdesk KVM is out of date. Version &lt;b&gt;%1&lt;/b&gt; is now available to &lt;a href=&quot;%2&quot;&gt;download&lt;/a&gt;.&lt;/p&gt;</source>
         <oldsource>&lt;p&gt;Version %1 is now available, &lt;a href=&quot;%2&quot;&gt;visit website&lt;/a&gt;.&lt;/p&gt;</oldsource>
-        <translation>&lt;p&gt;Ihre InputLeap-Version ist veraltet. Version &lt;b&gt;%1&lt;/b&gt; ist jetzt zum &lt;a href=&quot;%2&quot;&gt;Download&lt;/a&gt; verfügbar.&lt;/p&gt;</translation>
+        <translation>&lt;p&gt;Ihre Leapdesk-Version ist veraltet. Version &lt;b&gt;%1&lt;/b&gt; ist jetzt zum &lt;a href=&quot;%2&quot;&gt;Download&lt;/a&gt; verfügbar.&lt;/p&gt;</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="577"/>
@@ -228,13 +228,13 @@ Besuchen Sie unsere Website für Hilfe und Info (symless.com).
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="596"/>
-        <source>InputLeap client not found</source>
-        <translation>InputLeap-Client wurde nicht gefunden</translation>
+        <source>Leapdesk KVM client not found</source>
+        <translation>Leapdesk-Client wurde nicht gefunden</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="597"/>
-        <source>The executable for the InputLeap client does not exist.</source>
-        <translation>Die Anwendung für den InputLeap-Client existiert nicht.</translation>
+        <source>The executable for the Leapdesk KVM client does not exist.</source>
+        <translation>Die Anwendung für den Leapdesk-Client existiert nicht.</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="625"/>
@@ -243,8 +243,8 @@ Besuchen Sie unsere Website für Hilfe und Info (symless.com).
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="626"/>
-        <source>Please fill in a hostname for the InputLeap client to connect to.</source>
-        <translation>Bitte tragen Sie einen Hostnamen ein, zu dem sich der InputLeap-Client verbinden soll.</translation>
+        <source>Please fill in a hostname for the Leapdesk KVM client to connect to.</source>
+        <translation>Bitte tragen Sie einen Hostnamen ein, zu dem sich der Leapdesk-Client verbinden soll.</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="646"/>
@@ -253,8 +253,8 @@ Besuchen Sie unsere Website für Hilfe und Info (symless.com).
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="646"/>
-        <source>The temporary configuration file required to start InputLeap can not be written.</source>
-        <translation>Die für den Start von InputLeap nötige temporäre Konfigurationsdatei kann nicht geschrieben werden.</translation>
+        <source>The temporary configuration file required to start Leapdesk KVM can not be written.</source>
+        <translation>Die für den Start von Leapdesk KVM nötige temporäre Konfigurationsdatei kann nicht geschrieben werden.</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="659"/>
@@ -263,28 +263,28 @@ Besuchen Sie unsere Website für Hilfe und Info (symless.com).
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="660"/>
-        <source>You have not filled in a valid configuration file for the InputLeap server. Do you want to browse for the configuration file now?</source>
-        <translation>Sie haben keine gültige Konfigurationsdatei für den InputLeap-Server angegeben. Wollen sie jetzt nach dieser Datei suchen?</translation>
+        <source>You have not filled in a valid configuration file for the Leapdesk KVM server. Do you want to browse for the configuration file now?</source>
+        <translation>Sie haben keine gültige Konfigurationsdatei für den Leapdesk-Server angegeben. Wollen sie jetzt nach dieser Datei suchen?</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="688"/>
-        <source>InputLeap server not found</source>
-        <translation>InputLeap-Server nicht gefunden</translation>
+        <source>Leapdesk KVM server not found</source>
+        <translation>Leapdesk-Server nicht gefunden</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="689"/>
-        <source>The executable for the InputLeap server does not exist.</source>
-        <translation>Die Anwendung für den InputLeap-Server existiert nicht.</translation>
+        <source>The executable for the Leapdesk KVM server does not exist.</source>
+        <translation>Die Anwendung für den Leapdesk-Server existiert nicht.</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="764"/>
-        <source>InputLeap terminated with an error</source>
-        <translation>InputLeap mit Fehler beendet</translation>
+        <source>Leapdesk KVM terminated with an error</source>
+        <translation>Leapdesk KVM mit Fehler beendet</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="764"/>
-        <source>InputLeap terminated unexpectedly with an exit code of %1.&lt;br&gt;&lt;br&gt;Please see the log output for details.</source>
-        <translation>InputLeap unerwartet mit Exit-Code %1 beendet. &lt;br&gt;&lt;br&gt;Siehe Logausgabe für weitere Details.</translation>
+        <source>Leapdesk KVM terminated unexpectedly with an exit code of %1.&lt;br&gt;&lt;br&gt;Please see the log output for details.</source>
+        <translation>Leapdesk KVM unerwartet mit Exit-Code %1 beendet. &lt;br&gt;&lt;br&gt;Siehe Logausgabe für weitere Details.</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="783"/>
@@ -336,18 +336,18 @@ Möchten Sie Bonjour installieren?</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="815"/>
-        <source>InputLeap is starting.</source>
-        <translation>InputLeap startet.</translation>
+        <source>Leapdesk KVM is starting.</source>
+        <translation>Leapdesk KVM startet.</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="809"/>
-        <source>InputLeap is running.</source>
-        <translation>InputLeap läuft.</translation>
+        <source>Leapdesk KVM is running.</source>
+        <translation>Leapdesk KVM läuft.</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="819"/>
-        <source>InputLeap is not running.</source>
-        <translation>InputLeap läuft nicht.</translation>
+        <source>Leapdesk KVM is not running.</source>
+        <translation>Leapdesk KVM läuft nicht.</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="870"/>
@@ -358,18 +358,18 @@ Möchten Sie Bonjour installieren?</translation>
         <location filename="src/MainWindow.cpp" line="1146"/>
         <location filename="src/MainWindow.cpp" line="1225"/>
         <location filename="src/MainWindow.cpp" line="1269"/>
-        <source>InputLeap</source>
-        <translation>InputLeap</translation>
+        <source>Leapdesk KVM</source>
+        <translation>Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="987"/>
-        <source>Browse for a InputLeap config file</source>
-        <translation>Nach einer Konfigurationsdatei für InputLeap suchen</translation>
+        <source>Browse for a Leapdesk KVM config file</source>
+        <translation>Nach einer Konfigurationsdatei für Leapdesk KVM suchen</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="408"/>
-        <source>InputLeap is now connected, You can close the config window. InputLeap will remain connected in the background.</source>
-        <translation>InputLeap ist jetzt verbunden. Sie können das Konfigurationsfenster schließen. InputLeap wird im Hintergrund verbunden bleiben.</translation>
+        <source>Leapdesk KVM is now connected, You can close the config window. Leapdesk KVM will remain connected in the background.</source>
+        <translation>Leapdesk KVM ist jetzt verbunden. Sie können das Konfigurationsfenster schließen. Leapdesk KVM wird im Hintergrund verbunden bleiben.</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="434"/>
@@ -413,8 +413,8 @@ Um diesem Fingerabdruck bei zukünftigen Verbindeungen automatisch zu vertrauen,
     <name>MainWindow</name>
     <message>
         <location filename="res/MainWindow.ui" line="26"/>
-        <source>InputLeap</source>
-        <translation>InputLeap</translation>
+        <source>Leapdesk KVM</source>
+        <translation>Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="res/MainWindow.ui" line="90"/>
@@ -499,8 +499,8 @@ Um diesem Fingerabdruck bei zukünftigen Verbindeungen automatisch zu vertrauen,
     </message>
     <message>
         <location filename="res/MainWindow.ui" line="390"/>
-        <source>&amp;About InputLeap...</source>
-        <translation>&amp;Über InputLeap ...</translation>
+        <source>&amp;About Leapdesk KVM...</source>
+        <translation>&amp;Über Leapdesk KVM ...</translation>
     </message>
     <message>
         <location filename="res/MainWindow.ui" line="398"/>
@@ -620,8 +620,8 @@ Um diesem Fingerabdruck bei zukünftigen Verbindeungen automatisch zu vertrauen,
     <name>PluginWizardPage</name>
     <message>
         <location filename="res/PluginWizardPage.ui" line="14"/>
-        <source>Setup InputLeap</source>
-        <translation>InputLeap einrichten</translation>
+        <source>Setup Leapdesk KVM</source>
+        <translation>Leapdesk KVM einrichten</translation>
     </message>
     <message>
         <location filename="res/PluginWizardPage.ui" line="101"/>
@@ -674,13 +674,13 @@ Um diesem Fingerabdruck bei zukünftigen Verbindeungen automatisch zu vertrauen,
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="60"/>
-        <source>InputLeap Configurations (*.sgc)</source>
-        <translation>InputLeap-Konfigurationen (*.sgc)</translation>
+        <source>Leapdesk KVM Configurations (*.sgc)</source>
+        <translation>Leapdesk-Konfigurationen (*.sgc)</translation>
     </message>
     <message>
         <location filename="src/MainWindow.cpp" line="67"/>
-        <source>InputLeap Configurations (*.conf)</source>
-        <translation>InputLeap-Konfigurationen (*.conf)</translation>
+        <source>Leapdesk KVM Configurations (*.conf)</source>
+        <translation>Leapdesk-Konfigurationen (*.conf)</translation>
     </message>
     <message>
         <location filename="src/main.cpp" line="119"/>
@@ -913,8 +913,8 @@ Um diesem Fingerabdruck bei zukünftigen Verbindeungen automatisch zu vertrauen,
     </message>
     <message>
         <location filename="res/ServerConfigDialog.ui" line="60"/>
-        <source>Configure the layout of your InputLeap server configuration.</source>
-        <translation>Konfigurieren Sie die Anordnung Ihrer InputLeap-Server-Konfiguration.</translation>
+        <source>Configure the layout of your Leapdesk KVM server configuration.</source>
+        <translation>Konfigurieren Sie die Anordnung Ihrer Leapdesk-Server-Konfiguration.</translation>
     </message>
     <message>
         <location filename="res/ServerConfigDialog.ui" line="73"/>
@@ -1072,16 +1072,16 @@ Klicken Sie doppelt auf einen Bildschirm, um dessen Einstellungen zu bearbeiten.
     </message>
     <message>
         <location filename="src/SettingsDialog.cpp" line="151"/>
-        <source>Elevate InputLeap</source>
-        <translation>InputLeap als Admin ausführen</translation>
+        <source>Elevate Leapdesk KVM</source>
+        <translation>Leapdesk KVM als Admin ausführen</translation>
     </message>
     <message>
         <location filename="src/SettingsDialog.cpp" line="152"/>
-        <source>Are you sure you want to Elevate InputLeap?
+        <source>Are you sure you want to Elevate Leapdesk KVM?
 
-This allows InputLeap to interact with elevated processes and the UAC dialog, but can cause problems with non-elevated processes. Elevate InputLeap only if you really need to.</source>
-        <translation>Sind Sie sicher, dass Sie InputLeap erweiterte Benutzerrechte einräumen wollen?
-Das erlaubt InputLeap, mit Prozessen, die höhere Rechte haben, und dem UAC-Dialog zu interagieren, kann aber bei normalen Prozessen Probleme verursachen. Erweiterte Rechte an InputLeap bitte nur vergeben, wenn es unbedingt nötig ist.</translation>
+This allows Leapdesk KVM to interact with elevated processes and the UAC dialog, but can cause problems with non-elevated processes. Elevate Leapdesk KVM only if you really need to.</source>
+        <translation>Sind Sie sicher, dass Sie Leapdesk KVM erweiterte Benutzerrechte einräumen wollen?
+Das erlaubt Leapdesk KVM, mit Prozessen, die höhere Rechte haben, und dem UAC-Dialog zu interagieren, kann aber bei normalen Prozessen Probleme verursachen. Erweiterte Rechte an Leapdesk KVM bitte nur vergeben, wenn es unbedingt nötig ist.</translation>
     </message>
 </context>
 <context>
@@ -1196,8 +1196,8 @@ Das erlaubt InputLeap, mit Prozessen, die höhere Rechte haben, und dem UAC-Dial
     <name>SetupWizard</name>
     <message>
         <location filename="src/SetupWizard.cpp" line="72"/>
-        <source>Setup InputLeap</source>
-        <translation>InputLeap einrichten</translation>
+        <source>Setup Leapdesk KVM</source>
+        <translation>Leapdesk KVM einrichten</translation>
     </message>
     <message>
         <location filename="src/SetupWizard.cpp" line="113"/>
@@ -1214,8 +1214,8 @@ Das erlaubt InputLeap, mit Prozessen, die höhere Rechte haben, und dem UAC-Dial
     <name>SetupWizard</name>
     <message>
         <location filename="res/SetupWizard.ui" line="26"/>
-        <source>Setup InputLeap</source>
-        <translation>InputLeap einrichten</translation>
+        <source>Setup Leapdesk KVM</source>
+        <translation>Leapdesk KVM einrichten</translation>
     </message>
     <message>
         <location filename="res/SetupWizard.ui" line="30"/>
@@ -1224,13 +1224,13 @@ Das erlaubt InputLeap, mit Prozessen, die höhere Rechte haben, und dem UAC-Dial
     </message>
     <message>
         <location filename="res/SetupWizard.ui" line="39"/>
-        <source>Thanks for installing InputLeap!</source>
-        <translation>Danke, dass Sie InputLeap installiert haben!</translation>
+        <source>Thanks for installing Leapdesk KVM!</source>
+        <translation>Danke, dass Sie Leapdesk KVM installiert haben!</translation>
     </message>
     <message>
         <location filename="res/SetupWizard.ui" line="114"/>
-        <source>InputLeap lets you easily share your mouse and keyboard between multiple computers on your desk, and it&apos;s Free and Open Source. Just move your mouse off the edge of one computer&apos;s screen on to another. You can even share all of your clipboards. All you need is a network connection. InputLeap is cross-platform (works on Windows, Mac OS X and Linux).</source>
-        <translation>Mit InputLeap können Sie einfach Ihre Tastatur und Maus mit mehreren Computern auf Ihrem Schreibtisch teilen, und es ist frei und Open Source. Bewegen Sie einfach ihre Maus über den Rand des Bildschirms eines Computers auf den Bildschirm eines anderen. Sie können sogar den Inhalt ihrer Zwischenablage teilen. Alles, was Sie brauchen, ist ein Netzwerk-Verbindung. InputLeap ist betriebssystemübergreifend (funktioniert auf Windows, Mac OS X und Linux).</translation>
+        <source>Leapdesk KVM lets you easily share your mouse and keyboard between multiple computers on your desk, and it&apos;s Free and Open Source. Just move your mouse off the edge of one computer&apos;s screen on to another. You can even share all of your clipboards. All you need is a network connection. Leapdesk KVM is cross-platform (works on Windows, Mac OS X and Linux).</source>
+        <translation>Mit Leapdesk KVM können Sie einfach Ihre Tastatur und Maus mit mehreren Computern auf Ihrem Schreibtisch teilen, und es ist frei und Open Source. Bewegen Sie einfach ihre Maus über den Rand des Bildschirms eines Computers auf den Bildschirm eines anderen. Sie können sogar den Inhalt ihrer Zwischenablage teilen. Alles, was Sie brauchen, ist ein Netzwerk-Verbindung. Leapdesk KVM ist betriebssystemübergreifend (funktioniert auf Windows, Mac OS X und Linux).</translation>
     </message>
     <message>
         <location filename="res/SetupWizard.ui" line="125"/>
@@ -1432,8 +1432,8 @@ Server-Antwort:
     </message>
     <message>
         <location filename="src/ZeroconfService.cpp" line="140"/>
-        <source>InputLeap</source>
-        <translation>InputLeap</translation>
+        <source>Leapdesk KVM</source>
+        <translation>Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="src/ZeroconfService.cpp" line="141"/>

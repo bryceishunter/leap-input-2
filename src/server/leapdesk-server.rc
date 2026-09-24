@@ -74,7 +74,7 @@ BEGIN
             VALUE "ProductName", "Leapdesk KVM"
             VALUE "ProductVersion", INPUTLEAP_VERSION
             VALUE "OriginalFilename", "leapdesk-server.exe"
-            VALUE "FileDescription", "Open source KVM software server"
+            VALUE "FileDescription", "Leapdesk KVM Server"
             VALUE "InternalName", "leapdesk-server"
         END
     END

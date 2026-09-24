@@ -242,7 +242,7 @@ QString KeySequence::keyToString(int key)
 #else
         return QString("\\u%1").arg(QChar(key).toLower().unicode(), 4, 16, QChar('0'));
 #endif
-    // give up, InputLeap probably won't handle this
+    // give up, Leapdesk KVM probably won't handle this
     return "";
 }
 

@@ -5,8 +5,8 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../../src/AboutDialog.ui" line="38"/>
-        <source>About InputLeap</source>
-        <translation>关于 InputLeap</translation>
+        <source>About Leapdesk KVM</source>
+        <translation>关于 Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="../../src/AboutDialog.ui" line="140"/>
@@ -31,18 +31,18 @@ Keyboard and mouse sharing application. Cross platform and open source.&lt;br /&
 Copyright © 2018 Debauchee Open Source Group&lt;br /&gt;
 Copyright © 2012-2016 Symless Ltd.&lt;br /&gt;
 Copyright © 2002-2012 Chris Schoeneman, Nick Bolton, Volker Lanz.&lt;br /&gt;&lt;br /&gt;
-InputLeap is released under the GNU General Public License (GPLv2).&lt;br /&gt;&lt;br /&gt;
-InputLeap is based on CosmoSynergy by Richard Lee and Adam Feder.&lt;br /&gt;
-The InputLeap GUI is based on QSynergy by Volker Lanz.
+Leapdesk KVM is released under the GNU General Public License (GPLv2).&lt;br /&gt;&lt;br /&gt;
+Leapdesk KVM is based on CosmoSynergy by Richard Lee and Adam Feder.&lt;br /&gt;
+The Leapdesk KVM GUI is based on QSynergy by Volker Lanz.
 &lt;/p&gt;</source>
         <translation>&lt;p&gt;
 共享键盘和鼠标，跨平台并开源。&lt;br /&gt;&lt;br /&gt;
 Copyright © 2018 Debauchee Open Source Group&lt;br /&gt;
 Copyright © 2012-2016 Symless Ltd.&lt;br /&gt;
 Copyright © 2002-2012 Chris Schoeneman, Nick Bolton, Volker Lanz.&lt;br /&gt;&lt;br /&gt;
-InputLeap 适用 GNU 通用公共许可证（GPLv2）。&lt;br /&gt;&lt;br /&gt;
-InputLeap 基于 Richard Lee 和 Adam Feder 制作的 CosmoSynergy .&lt;br /&gt;
-InputLeap GUI 基于 Volker Lanz 制作的 QSynergy.
+Leapdesk KVM 适用 GNU 通用公共许可证（GPLv2）。&lt;br /&gt;&lt;br /&gt;
+Leapdesk KVM 基于 Richard Lee 和 Adam Feder 制作的 CosmoSynergy .&lt;br /&gt;
+Leapdesk KVM GUI 基于 Volker Lanz 制作的 QSynergy.
 &lt;/p&gt;</translation>
     </message>
     <message>
@@ -189,8 +189,8 @@ InputLeap GUI 基于 Volker Lanz 制作的 QSynergy.
     <name>LogWindow</name>
     <message>
         <location filename="../../src/LogWindow.ui" line="26"/>
-        <source>Log - InputLeap</source>
-        <translation>日志 - InputLeap</translation>
+        <source>Log - Leapdesk KVM</source>
+        <translation>日志 - Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="../../src/LogWindow.ui" line="71"/>
@@ -227,13 +227,13 @@ InputLeap GUI 基于 Volker Lanz 制作的 QSynergy.
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="583"/>
-        <source>InputLeap client not found</source>
-        <translation>未找到InputLeap客户端</translation>
+        <source>Leapdesk KVM client not found</source>
+        <translation>未找到Leapdesk KVM客户端</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="584"/>
-        <source>The executable for the InputLeap client does not exist.</source>
-        <translation>InputLeap客户端的可执行程序不存在。</translation>
+        <source>The executable for the Leapdesk KVM client does not exist.</source>
+        <translation>Leapdesk KVM客户端的可执行程序不存在。</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="610"/>
@@ -242,8 +242,8 @@ InputLeap GUI 基于 Volker Lanz 制作的 QSynergy.
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="611"/>
-        <source>Please fill in a hostname for the InputLeap client to connect to.</source>
-        <translation>请为InputLeap客户端设置一个用于连接的主机名。</translation>
+        <source>Please fill in a hostname for the Leapdesk KVM client to connect to.</source>
+        <translation>请为Leapdesk KVM客户端设置一个用于连接的主机名。</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="631"/>
@@ -252,8 +252,8 @@ InputLeap GUI 基于 Volker Lanz 制作的 QSynergy.
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="631"/>
-        <source>The temporary configuration file required to start InputLeap can not be written.</source>
-        <translation>启动InputLeap所需的临时配置文件不可写。</translation>
+        <source>The temporary configuration file required to start Leapdesk KVM can not be written.</source>
+        <translation>启动Leapdesk KVM所需的临时配置文件不可写。</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="644"/>
@@ -262,18 +262,18 @@ InputLeap GUI 基于 Volker Lanz 制作的 QSynergy.
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="645"/>
-        <source>You have not filled in a valid configuration file for the InputLeap server. Do you want to browse for the configuration file now?</source>
-        <translation>InputLeap服务端缺少有效的配置文件。需要现在浏览配置文件吗？</translation>
+        <source>You have not filled in a valid configuration file for the Leapdesk KVM server. Do you want to browse for the configuration file now?</source>
+        <translation>Leapdesk KVM服务端缺少有效的配置文件。需要现在浏览配置文件吗？</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="675"/>
-        <source>InputLeap server not found</source>
-        <translation>未找到InputLeap服务端</translation>
+        <source>Leapdesk KVM server not found</source>
+        <translation>未找到Leapdesk KVM服务端</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="676"/>
-        <source>The executable for the InputLeap server does not exist.</source>
-        <translation>InputLeap服务端可执行程序不存在。</translation>
+        <source>The executable for the Leapdesk KVM server does not exist.</source>
+        <translation>Leapdesk KVM服务端可执行程序不存在。</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="783"/>
@@ -325,18 +325,18 @@ Do you want to install Bonjour?</source>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="818"/>
-        <source>InputLeap is starting.</source>
-        <translation>InputLeap正在启动</translation>
+        <source>Leapdesk KVM is starting.</source>
+        <translation>Leapdesk KVM正在启动</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="812"/>
-        <source>InputLeap is running.</source>
-        <translation>InputLeap正在运行</translation>
+        <source>Leapdesk KVM is running.</source>
+        <translation>Leapdesk KVM正在运行</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="822"/>
-        <source>InputLeap is not running.</source>
-        <translation>InputLeap没有运行</translation>
+        <source>Leapdesk KVM is not running.</source>
+        <translation>Leapdesk KVM没有运行</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="878"/>
@@ -347,13 +347,13 @@ Do you want to install Bonjour?</source>
         <location filename="../../src/MainWindow.cpp" line="1134"/>
         <location filename="../../src/MainWindow.cpp" line="1217"/>
         <location filename="../../src/MainWindow.cpp" line="1247"/>
-        <source>InputLeap</source>
-        <translation>InputLeap</translation>
+        <source>Leapdesk KVM</source>
+        <translation>Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="993"/>
-        <source>Browse for a InputLeap config file</source>
-        <translation>浏览InputLeap配置文件</translation>
+        <source>Browse for a Leapdesk KVM config file</source>
+        <translation>浏览Leapdesk KVM配置文件</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="432"/>
@@ -394,21 +394,21 @@ To automatically trust this fingerprint for future connections, click Yes. To re
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="244"/>
-        <source>&amp;InputLeap</source>
-        <translation>&amp;InputLeap</translation>
+        <source>&amp;Leapdesk KVM</source>
+        <translation>&amp;Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="402"/>
-        <source>InputLeap is now connected. You can close the config window and InputLeap will remain connected in the background.</source>
-        <translation>InputLeap已连接。现在可以关闭窗口，InputLeap会在后台保持连接。</translation>
+        <source>Leapdesk KVM is now connected. You can close the config window and Leapdesk KVM will remain connected in the background.</source>
+        <translation>Leapdesk KVM已连接。现在可以关闭窗口，Leapdesk KVM会在后台保持连接。</translation>
     </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message>
         <location filename="../../src/MainWindow.ui" line="26"/>
-        <source>InputLeap</source>
-        <translation>InputLeap</translation>
+        <source>Leapdesk KVM</source>
+        <translation>Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.ui" line="39"/>
@@ -483,8 +483,8 @@ To automatically trust this fingerprint for future connections, click Yes. To re
     </message>
     <message>
         <location filename="../../src/MainWindow.ui" line="303"/>
-        <source>&amp;About InputLeap...</source>
-        <translation>关于InputLeap(&amp;A)…</translation>
+        <source>&amp;About Leapdesk KVM...</source>
+        <translation>关于Leapdesk KVM(&amp;A)…</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.ui" line="311"/>
@@ -584,13 +584,13 @@ To automatically trust this fingerprint for future connections, click Yes. To re
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="58"/>
-        <source>InputLeap Configurations (*.sgc)</source>
-        <translation>InputLeap配置文件 (*.sgc)</translation>
+        <source>Leapdesk KVM Configurations (*.sgc)</source>
+        <translation>Leapdesk KVM配置文件 (*.sgc)</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="65"/>
-        <source>InputLeap Configurations (*.conf)</source>
-        <translation>InputLeap配置文件 (*.conf)</translation>
+        <source>Leapdesk KVM Configurations (*.conf)</source>
+        <translation>Leapdesk KVM配置文件 (*.conf)</translation>
     </message>
 </context>
 <context>
@@ -831,8 +831,8 @@ To automatically trust this fingerprint for future connections, click Yes. To re
     </message>
     <message>
         <location filename="../../src/ServerConfigDialog.ui" line="60"/>
-        <source>Configure the layout of your InputLeap server configuration.</source>
-        <translation>配置InputLeap服务端的屏幕布局。</translation>
+        <source>Configure the layout of your Leapdesk KVM server configuration.</source>
+        <translation>配置Leapdesk KVM服务端的屏幕布局。</translation>
     </message>
     <message>
         <location filename="../../src/ServerConfigDialog.ui" line="73"/>
@@ -1098,8 +1098,8 @@ Double click on a screen to edit its settings.</source>
     </message>
     <message>
         <location filename="../../src/SettingsDialog.ui" line="93"/>
-        <source>Specify when the InputLeap service should run at an elevated privilege level</source>
-        <translation>设置InputLeap服务何时应该提权运行</translation>
+        <source>Specify when the Leapdesk KVM service should run at an elevated privilege level</source>
+        <translation>设置Leapdesk KVM服务何时应该提权运行</translation>
     </message>
     <message>
         <location filename="../../src/SettingsDialog.ui" line="100"/>
@@ -1123,7 +1123,7 @@ Double click on a screen to edit its settings.</source>
     </message>
     <message>
         <location filename="../../src/SettingsDialog.ui" line="132"/>
-        <source>Start &amp;InputLeap on startup</source>
+        <source>Start &amp;Leapdesk KVM on startup</source>
         <translation>自动启动</translation>
     </message>
     <message>
@@ -1146,8 +1146,8 @@ Double click on a screen to edit its settings.</source>
     <name>SetupWizard</name>
     <message>
         <location filename="../../src/SetupWizard.cpp" line="63"/>
-        <source>Setup InputLeap</source>
-        <translation>设置InputLeap</translation>
+        <source>Setup Leapdesk KVM</source>
+        <translation>设置Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="../../src/SetupWizard.cpp" line="73"/>
@@ -1159,8 +1159,8 @@ Double click on a screen to edit its settings.</source>
     <name>SetupWizard</name>
     <message>
         <location filename="../../src/SetupWizard.ui" line="26"/>
-        <source>Setup InputLeap</source>
-        <translation>设置InputLeap</translation>
+        <source>Setup Leapdesk KVM</source>
+        <translation>设置Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="../../src/SetupWizard.ui" line="30"/>
@@ -1169,13 +1169,13 @@ Double click on a screen to edit its settings.</source>
     </message>
     <message>
         <location filename="../../src/SetupWizard.ui" line="39"/>
-        <source>Thanks for installing InputLeap!</source>
-        <translation>感谢您安装InputLeap！</translation>
+        <source>Thanks for installing Leapdesk KVM!</source>
+        <translation>感谢您安装Leapdesk KVM！</translation>
     </message>
     <message>
         <location filename="../../src/SetupWizard.ui" line="114"/>
-        <source>InputLeap lets you easily share your mouse and keyboard between multiple computers on your desk, and it&apos;s Free and Open Source. Just move your mouse off the edge of one computer&apos;s screen on to another. You can even share all of your clipboards. All you need is a network connection. InputLeap is cross-platform (works on Windows, Mac OS X and Linux).</source>
-        <translation>InputLeap可以在多台计算机间轻松共享你的鼠标和键盘，它还是自由开源软件。将鼠标指针从计算机的屏幕边缘移出到另一个屏幕，并同时共享剪贴板，只要你有一个网络连接。InputLeap是跨平台的（可以运行于Windows，Mac OS X和Linux）。</translation>
+        <source>Leapdesk KVM lets you easily share your mouse and keyboard between multiple computers on your desk, and it&apos;s Free and Open Source. Just move your mouse off the edge of one computer&apos;s screen on to another. You can even share all of your clipboards. All you need is a network connection. Leapdesk KVM is cross-platform (works on Windows, Mac OS X and Linux).</source>
+        <translation>Leapdesk KVM可以在多台计算机间轻松共享你的鼠标和键盘，它还是自由开源软件。将鼠标指针从计算机的屏幕边缘移出到另一个屏幕，并同时共享剪贴板，只要你有一个网络连接。Leapdesk KVM是跨平台的（可以运行于Windows，Mac OS X和Linux）。</translation>
     </message>
     <message>
         <location filename="../../src/SetupWizard.ui" line="146"/>
@@ -1297,8 +1297,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../../src/ZeroconfService.cpp" line="164"/>
-        <source>InputLeap</source>
-        <translation>InputLeap</translation>
+        <source>Leapdesk KVM</source>
+        <translation>Leapdesk KVM</translation>
     </message>
     <message>
         <location filename="../../src/ZeroconfService.cpp" line="165"/>

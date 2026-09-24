@@ -37,7 +37,7 @@ begin
             '--log "C:\Users\A B\AppData\Local\Leapdesk\client.log" 100.111.152.25:24800';
   Server := '"C:\Program Files\Leapdesk\leapdesk-server.exe" -f --no-tray --ipc --debug NOTE ' +
             '--name DESKTOP-GP522K1 --profile-dir "C:\Users\A B\AppData\Local\Leapdesk" ' +
-            '-c "D:\dev\leap-input\deploy\leapdesk.sgc"';
+            '-c "D:\dev\leapdesk\deploy\leapdesk.sgc"';
   Legacy := '"C:\Program Files\InputLeap\input-leapc.exe" -f -n studio 10.0.0.2';
 
   Args := SplitCommand(Client);
@@ -47,7 +47,7 @@ begin
 
   CheckEqual('reads --name', OptionValue(Client, '-n', '--name'), 'surfacestudio');
   CheckEqual('reads -n', OptionValue(Legacy, '-n', '--name'), 'studio');
-  CheckEqual('reads -c', OptionValue(Server, '-c', '--config'), 'D:\dev\leap-input\deploy\leapdesk.sgc');
+  CheckEqual('reads -c', OptionValue(Server, '-c', '--config'), 'D:\dev\leapdesk\deploy\leapdesk.sgc');
   CheckEqual('a missing option is empty', OptionValue(Client, '-c', '--config'), '');
 
   CheckEqual('a client command ends with the server', CommandServer(Client), '100.111.152.25:24800');

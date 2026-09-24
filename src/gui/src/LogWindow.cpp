@@ -39,7 +39,7 @@ LogWindow::LogWindow(QWidget *parent) :
     ui_{std::make_unique<Ui::LogWindow>()}
 {
     // explicitly unset DeleteOnClose so the log window can be show and hidden
-    // repeatedly until InputLeap is finished
+    // repeatedly until Leapdesk KVM is finished
     setAttribute(Qt::WA_DeleteOnClose, false);
     ui_->setupUi(this);
 
