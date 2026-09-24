@@ -4,7 +4,7 @@ Share one keyboard and mouse across several computers. Move the pointer off the
 edge of one screen and it appears on the next machine; the clipboard follows.
 It works over any IP network — a LAN, Tailscale, WireGuard, whatever you have.
 
-Leapdesk KVM continues [Input Leap](https://github.com/bryceishunter/leapdesk-kvm),
+Leapdesk KVM continues [Input Leap](https://github.com/input-leap/input-leap),
 which is no longer maintained. Input Leap forked Barrier, which forked Synergy
 1.x, and the goal has not changed since: one keyboard and mouse, several
 machines, nothing else.

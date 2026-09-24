@@ -2,19 +2,19 @@ name: leapdesk-kvm
 base: core18
 version: master
 version-script: git describe --tags | sed "s/^v//"
-adopt-info: appstream-flathub
+adopt-info: leapdesk-kvm
 grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: strict # use 'strict' once you have the right plugs and slots
-icon: res/leapdesk-kvm.svg
+icon: res/io.github.bryceishunter.leapdesk-kvm.svg
 license: GPL-2.0
 
 apps:
   leapdesk-kvm:
-    command: desktop-launch leapdesk-kvm #first run might take longer
+    command: desktop-launch leapdesk #first run might take longer
     environment:
       # Fallback to XWayland if running in a Wayland session.
       DISABLE_WAYLAND: 1
-    desktop: usr/share/applications/leapdesk-kvm.desktop
+    desktop: usr/share/applications/io.github.bryceishunter.leapdesk-kvm.desktop
     common-id: io.github.bryceishunter.leapdesk-kvm
     plugs: &plugs
       - desktop
@@ -45,6 +45,7 @@ parts:
     source: .
     source-type: git
     plugin: cmake
+    parse-info: [usr/share/metainfo/io.github.bryceishunter.leapdesk-kvm.appdata.xml]
     configflags:
       - "-DQT_DEFAULT_MAJOR_VERSION=5"
       - "-DCMAKE_INSTALL_PREFIX=/usr"
@@ -81,10 +82,5 @@ parts:
   fix-icon:
     plugin: nil
     override-build:
-      sed -i 's|Icon=leapdesk-kvm|Icon=/usr/share/icons/hicolor/scalable/apps/leapdesk-kvm.svg|' $SNAPCRAFT_STAGE/usr/share/applications/leapdesk-kvm.desktop
+      sed -i 's|Icon=io.github.bryceishunter.leapdesk-kvm|Icon=/usr/share/icons/hicolor/scalable/apps/io.github.bryceishunter.leapdesk-kvm.svg|' $SNAPCRAFT_STAGE/usr/share/applications/io.github.bryceishunter.leapdesk-kvm.desktop
     after: [leapdesk-kvm]
-
-  appstream-flathub:
-    plugin: dump
-    source: https://github.com/flathub/com.github.leapdesk-kvm.leapdesk-kvm.git
-    parse-info: [io.github.bryceishunter.leapdesk-kvm.appdata.xml]
