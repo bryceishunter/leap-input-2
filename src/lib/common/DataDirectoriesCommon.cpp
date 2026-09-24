@@ -21,10 +21,15 @@ namespace inputleap {
 void maybe_copy_old_profile_cert(const fs::path& old_profile_path,
                                  const fs::path& curr_profile_path)
 {
-    auto old_cert_path = curr_profile_path / "SSL" / "Barrier.pem";
+    // the certificate as Input Leap and Barrier named it
+    static const char* const old_cert_names[] = {"InputLeap.pem", "Barrier.pem"};
+
     auto new_cert_path = curr_profile_path / "SSL" / "Leapdesk.pem";
-    if (fs::is_regular_file(old_cert_path) && !fs::exists(new_cert_path)) {
-        fs::rename(old_cert_path, new_cert_path);
+    for (const char* old_cert_name : old_cert_names) {
+        auto old_cert_path = curr_profile_path / "SSL" / old_cert_name;
+        if (fs::is_regular_file(old_cert_path) && !fs::exists(new_cert_path)) {
+            fs::rename(old_cert_path, new_cert_path);
+        }
     }
 }
 

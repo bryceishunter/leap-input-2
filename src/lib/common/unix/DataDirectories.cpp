@@ -79,7 +79,7 @@ static fs::path profile_basedir()
 #if defined(WINAPI_XWINDOWS) || defined(WINAPI_LIBEI)
 static fs::path old_profile_basedir()
 {
-    // The following was used before 3.0.0
+    // Input Leap used this before 3.0.0
     const char* dir = std::getenv("XDG_DATA_HOME");
     if (dir != nullptr)
         return fs::u8path(dir);
@@ -91,10 +91,12 @@ const fs::path& DataDirectories::profile()
 {
     if (_profile.empty()) {
         _profile = profile_basedir() / "Leapdesk";
-        maybe_copy_old_profile(profile_basedir() / "barrier", _profile);
+        // carry over Input Leap's profile, or failing that Barrier's
+        maybe_copy_old_profile(profile_basedir() / "InputLeap", _profile);
 #if defined(WINAPI_XWINDOWS) || defined(WINAPI_LIBEI)
-        maybe_copy_old_profile(old_profile_basedir() / "Leapdesk", _profile);
+        maybe_copy_old_profile(old_profile_basedir() / "InputLeap", _profile);
 #endif
+        maybe_copy_old_profile(profile_basedir() / "barrier", _profile);
     }
     return _profile;
 }
