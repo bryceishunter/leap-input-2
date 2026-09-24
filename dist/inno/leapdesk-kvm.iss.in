@@ -83,6 +83,8 @@ MinVersion=10.0
 OutputDir={#OutputDir}
 OutputBaseFilename={#OutputName}
 SetupIconFile={#RepoDir}\res\leapdesk.ico
+; one per display scale from 100% to 250%; Setup picks the closest.  made by res\make-icons.py
+WizardSmallImageFile={#RepoDir}\dist\inno\wizard-small-55.bmp,{#RepoDir}\dist\inno\wizard-small-69.bmp,{#RepoDir}\dist\inno\wizard-small-83.bmp,{#RepoDir}\dist\inno\wizard-small-96.bmp,{#RepoDir}\dist\inno\wizard-small-110.bmp,{#RepoDir}\dist\inno\wizard-small-138.bmp
 #if Role == "Server"
 UninstallDisplayIcon={app}\leapdesk.exe
 #else
